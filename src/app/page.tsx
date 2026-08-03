@@ -562,15 +562,11 @@ export default function Dashboard() {
                                   onClick={() => handleToggleDay(habit.id, day.dateString)}
                                   className={`w-8 h-8 rounded flex items-center justify-center transition-all ${
                                     isCompleted
-                                      ? (isDarkMode 
-                                          ? 'bg-cyber-neon text-slate-950 shadow-neon-glow hover:bg-emerald-400 font-bold' 
-                                          : 'neu-checkbox-checked text-slate-800 font-bold')
-                                      : (isDarkMode 
-                                          ? 'border border-slate-700 bg-slate-950/50 hover:border-cyber-neon/50 text-transparent' 
-                                          : 'neu-checkbox-unchecked text-transparent hover:text-slate-400')
+                                      ? 'neu-checkbox-checked font-bold'
+                                      : 'neu-checkbox-unchecked'
                                   }`}
                                 >
-                                  {isCompleted ? (isDarkMode ? <Check className="h-4 w-4 stroke-[3px]" /> : 'check') : <Check className="h-4 w-4" />}
+                                  {isCompleted && <Check className="h-4 w-4 stroke-[3px]" />}
                                 </button>
                               ) : (
                                 <div className="w-8 h-8 flex items-center justify-center text-slate-400/30 text-xs font-mono font-bold select-none">
