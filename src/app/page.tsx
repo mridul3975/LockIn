@@ -434,9 +434,10 @@ export default function Dashboard() {
               <div className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-cyber-neon" />
                 <h2 className="text-lg font-mono font-bold tracking-widest uppercase text-white">Daily Habit Matrix</h2>
+              </div>
+            </div>
 
-
-                <div className="overflow-x-auto">
+            <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="border-b border-slate-800/60 pb-3">
@@ -641,10 +642,11 @@ export default function Dashboard() {
                       key={mode}
                       type="button"
                       onClick={() => setComplianceMode(mode)}
-                      className={`flex-1 text-center py-1.5 rounded-md text-xs font-mono font-bold transition-all uppercase ${complianceMode === mode
+                      className={`flex-1 text-center py-1.5 rounded-md text-xs font-mono font-bold transition-all uppercase ${
+                        complianceMode === mode
                           ? 'bg-cyber-neon text-slate-950 shadow-neon-glow'
                           : 'text-slate-500 hover:text-slate-300'
-                        }`}
+                      }`}
                     >
                       {mode}
                     </button>
