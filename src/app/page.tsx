@@ -109,39 +109,17 @@ export default function Dashboard() {
 
   if (status === 'unauthenticated') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background relative overflow-hidden px-4">
-        {/* Glow behind the login box */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyber-neon/10 rounded-full blur-[80px] pointer-events-none" />
-
-        <div className="glass-card rounded-2xl p-8 max-w-md w-full border border-slate-800/80 text-center relative z-10 shadow-neon-border">
-          <div className="flex flex-col items-center mb-8">
-            <span className="h-3 w-3 rounded-full bg-cyber-neon mb-3" />
-            <h1 className="text-4xl font-black font-mono tracking-widest text-white mb-2">
-              LOCK<span className="text-cyber-neon">//</span>IN
-            </h1>
-            <p className="text-xs font-mono text-slate-500 uppercase tracking-widest">
-              Identity Synchronization Required
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            <div className="bg-slate-950/60 border border-slate-800/80 p-4 rounded-lg text-left">
-              <p className="text-xs font-mono text-slate-400 leading-relaxed">
-                To isolate and protect your personal productivity engrams, habits, sleep telemetry, and score metrics, secure authentication via Google Sign-In is required.
-              </p>
-            </div>
-
-            <button
-              onClick={() => signIn('google')}
-              className="w-full flex items-center justify-center gap-3 bg-cyber-neon hover:bg-emerald-400 text-slate-950 font-mono font-black text-sm uppercase py-3.5 rounded-lg transition-all shadow-neon-glow"
-            >
-              <Zap className="h-4 w-4 stroke-[3px]" /> Access with Google
-            </button>
-          </div>
-
-          <div className="mt-8 text-[10px] font-mono text-slate-600">
-            SYSTEM STATUS: OPERATIONAL // SECURE PROTOCOL ACTIVE
-          </div>
+      <div className="flex items-center justify-center min-h-screen bg-black px-4">
+        <div className="border border-slate-800/80 p-8 rounded-xl max-w-sm w-full text-center bg-zinc-950/80">
+          <h1 className="text-3xl font-black font-mono tracking-widest text-slate-200 mb-8">
+            LOCK<span className="text-slate-500">//</span>In
+          </h1>
+          <button
+            onClick={() => signIn('google')}
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-200 text-slate-950 font-mono font-bold text-sm py-3 rounded-lg border border-slate-300 transition-all shadow-sm"
+          >
+            Sign in with Google
+          </button>
         </div>
       </div>
     );
