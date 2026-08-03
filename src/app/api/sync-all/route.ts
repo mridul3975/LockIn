@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/options';
 import { db } from '@/db/db';
 import { habits, habitLogs, sleepLogs } from '@/db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, notInArray } from 'drizzle-orm';
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +17,18 @@ export async function POST(req: Request) {
 
     // 1. Sync habits (only allowed to create/modify habits belonging to this user)
     if (Array.isArray(localHabits)) {
+      const localHabitIds = localHabits.map((h) => h.id);
+      if (localHabitIds.length > 0) {
+        await db.delete(habits).where(
+          and(
+            eq(habits.userId, userId),
+            notInArray(habits.id, localHabitIds)
+          )
+        );
+      } else {
+        await db.delete(habits).where(eq(habits.userId, userId));
+      }
+
       for (const h of localHabits) {
         const existing = await db
           .select()
