@@ -440,14 +440,6 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Calendar Range Box */}
-            <div className="flex items-center gap-2 bg-slate-950/5 px-3 py-2 rounded-lg border border-slate-300/50">
-              <Calendar className="h-4 w-4 text-slate-500" />
-              <span className="text-xs font-mono font-bold text-slate-600">
-                INDEX: {currentWeekDates[0].dateString} to {currentWeekDates[6].dateString}
-              </span>
-            </div>
-
             {/* Sync Action */}
             <button
               onClick={syncWithDb}
@@ -610,7 +602,7 @@ export default function Dashboard() {
             {/* Creator form */}
             <div className="glass-card rounded-xl p-6 transition-all">
               <h3 className={`text-md font-mono font-bold tracking-widest uppercase mb-4 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                Initialize Habit Module
+                New Habit
               </h3>
               <form onSubmit={handleAddHabitSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -803,7 +795,7 @@ export default function Dashboard() {
               <div className="flex items-center gap-2 mb-4">
                 <Moon className="h-5 w-5 text-slate-500" />
                 <h3 className={`text-md font-mono font-bold tracking-widest uppercase ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                  Sleep telemetry
+                  Sleep Schedule
                 </h3>
               </div>
 
