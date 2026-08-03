@@ -403,8 +403,8 @@ export default function Dashboard() {
             onClick={syncWithDb}
             disabled={isSyncing}
             className={`flex items-center gap-2 font-mono text-xs font-semibold px-2.5 py-1 rounded transition-colors ${isSyncing
-                ? 'bg-slate-900 text-slate-500 cursor-not-allowed'
-                : 'bg-cyber-neon/10 border border-cyber-neon/30 text-cyber-neon hover:bg-cyber-neon/20'
+              ? 'bg-slate-900 text-slate-500 cursor-not-allowed'
+              : 'bg-cyber-neon/10 border border-cyber-neon/30 text-cyber-neon hover:bg-cyber-neon/20'
               }`}
           >
             <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -434,10 +434,9 @@ export default function Dashboard() {
               <div className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-cyber-neon" />
                 <h2 className="text-lg font-mono font-bold tracking-widest uppercase text-white">Daily Habit Matrix</h2>
-              </div>
-            </div>
 
-            <div className="overflow-x-auto">
+
+                <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="border-b border-slate-800/60 pb-3">
@@ -496,8 +495,8 @@ export default function Dashboard() {
                                   <button
                                     onClick={() => handleToggleDay(habit.id, day.dateString)}
                                     className={`w-8 h-8 rounded flex items-center justify-center transition-all ${isCompleted
-                                        ? 'bg-cyber-neon text-slate-950 shadow-neon-glow hover:bg-emerald-400'
-                                        : 'border border-slate-700 bg-slate-950/50 hover:border-cyber-neon/50 hover:bg-cyber-neon/5 text-transparent hover:text-slate-600'
+                                      ? 'bg-cyber-neon text-slate-950 shadow-neon-glow hover:bg-emerald-400'
+                                      : 'border border-slate-700 bg-slate-950/50 hover:border-cyber-neon/50 hover:bg-cyber-neon/5 text-transparent hover:text-slate-600'
                                       }`}
                                   >
                                     <Check className="h-4 w-4 stroke-[3px]" />
@@ -577,8 +576,8 @@ export default function Dashboard() {
                               type="button"
                               onClick={() => toggleDaySelection(idx)}
                               className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-all ${selected
-                                  ? 'bg-cyber-neon text-slate-950 font-bold'
-                                  : 'bg-slate-900 text-slate-500 border border-slate-800 hover:border-slate-700'
+                                ? 'bg-cyber-neon text-slate-950 font-bold'
+                                : 'bg-slate-900 text-slate-500 border border-slate-800 hover:border-slate-700'
                                 }`}
                             >
                               {day.name}
@@ -630,7 +629,7 @@ export default function Dashboard() {
                 <div className="w-full flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-cyber-neon" />
-                    <h3 className="text-sm font-mono font-bold tracking-widest uppercase text-slate-200">Compliance</h3>
+                    <h3 className="text-sm font-mono font-bold tracking-widest uppercase text-slate-200">PROGRESS</h3>
                   </div>
                   <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Interactive Radial</span>
                 </div>
@@ -642,11 +641,10 @@ export default function Dashboard() {
                       key={mode}
                       type="button"
                       onClick={() => setComplianceMode(mode)}
-                      className={`flex-1 text-center py-1.5 rounded-md text-xs font-mono font-bold transition-all uppercase ${
-                        complianceMode === mode
-                          ? 'bg-cyber-neon text-slate-950 shadow-neon-glow'
-                          : 'text-slate-500 hover:text-slate-300'
-                      }`}
+                      className={`flex-1 text-center py-1.5 rounded-md text-xs font-mono font-bold transition-all uppercase ${complianceMode === mode
+                        ? 'bg-cyber-neon text-slate-950 shadow-neon-glow'
+                        : 'text-slate-500 hover:text-slate-300'
+                        }`}
                     >
                       {mode}
                     </button>
@@ -774,5 +772,7 @@ export default function Dashboard() {
           </div>
 
         </div>
-        );
+      </div>
+    </div>
+  )
 }

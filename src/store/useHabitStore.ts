@@ -45,19 +45,10 @@ interface HabitState {
   clearLocalCache: () => void;
 }
 
-const DEFAULT_HABITS: Habit[] = [
-  { id: 'h1', name: 'Wake up at 5:30', frequency: 'daily', frequencyDays: [0, 1, 2, 3, 4, 5, 6], order: 0, createdAt: new Date().toISOString() },
-  { id: 'h2', name: 'Gym', frequency: 'daily', frequencyDays: [0, 1, 2, 3, 4, 5, 6], order: 1, createdAt: new Date().toISOString() },
-  { id: 'h3', name: 'Act on To-Do List', frequency: 'daily', frequencyDays: [0, 1, 2, 3, 4, 5, 6], order: 2, createdAt: new Date().toISOString() },
-  { id: 'h4', name: 'Project Work', frequency: 'daily', frequencyDays: [0, 1, 2, 3, 4, 5, 6], order: 3, createdAt: new Date().toISOString() },
-  { id: 'h5', name: 'Drink 4L Water', frequency: 'daily', frequencyDays: [0, 1, 2, 3, 4, 5, 6], order: 4, createdAt: new Date().toISOString() },
-  { id: 'h6', name: 'No Alcohol', frequency: 'daily', frequencyDays: [0, 1, 2, 3, 4, 5, 6], order: 5, createdAt: new Date().toISOString() },
-];
-
 export const useHabitStore = create<HabitState>()(
   persist(
     (set, get) => ({
-      habits: DEFAULT_HABITS,
+      habits: [],
       logs: [],
       sleepLogs: [],
       isSyncing: false,
@@ -67,7 +58,7 @@ export const useHabitStore = create<HabitState>()(
       },
 
       clearLocalCache: () => {
-        set({ habits: DEFAULT_HABITS, logs: [], sleepLogs: [] });
+        set({ habits: [], logs: [], sleepLogs: [] });
       },
 
       toggleHabit: (habitId, date) => {
