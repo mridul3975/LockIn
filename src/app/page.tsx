@@ -446,7 +446,7 @@ export default function Dashboard() {
 
           {/* Carved Matrix */}
           <div className="carved-area p-4 sm:p-6 lg:p-10 w-full flex flex-col gap-6 lg:gap-8">
-            <div className="overflow-x-auto w-full scrollbar-thin">
+            <div className="overflow-x-auto w-full scrollbar-thin order-1">
               <table className="w-full border-separate border-spacing-y-3 border-spacing-x-2 sm:border-spacing-y-4 sm:border-spacing-x-4 min-w-[640px]">
                 <thead>
                   <tr className="etched-text font-label-caps text-[9px] uppercase tracking-[0.3em] text-[#334155] font-bold">
@@ -525,8 +525,13 @@ export default function Dashboard() {
               </table>
             </div>
 
+            {/* Mobile Compliance (Only visible below lg) */}
+            <div className="lg:hidden order-2 w-full">
+              {renderComplianceIndex()}
+            </div>
+
             {/* Creator Form */}
-            <div className="embossed-panel p-4 sm:p-6 mt-2">
+            <div className="embossed-panel p-4 sm:p-6 mt-2 order-3 lg:order-2">
               <h3 className="font-headline-md text-xs sm:text-sm font-bold text-[#334155] uppercase mb-4">Define Vector</h3>
               <form onSubmit={handleAddHabitSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -582,8 +587,13 @@ export default function Dashboard() {
               </form>
             </div>
 
+            {/* Mobile Completion IDX (Only visible below lg) */}
+            <div className="lg:hidden order-4 w-full">
+              {renderCompletionIndex()}
+            </div>
+
             {/* Sleep log */}
-            <div className="embossed-panel p-4 sm:p-6">
+            <div className="embossed-panel p-4 sm:p-6 order-5 lg:order-3">
               <h3 className="font-headline-md text-xs sm:text-sm font-bold text-[#334155] uppercase mb-4">Sleep Log Coordinates</h3>
               <div className="h-32 w-full mb-4">
                 <ResponsiveContainer width="100%" height="100%">
@@ -629,12 +639,6 @@ export default function Dashboard() {
               </form>
             </div>
 
-          </div>
-
-          {/* MOBILE METRICS LAYOUT (Only visible below lg) */}
-          <div className="lg:hidden flex flex-col gap-6 w-full">
-            {renderCompletionIndex()}
-            {renderComplianceIndex()}
           </div>
 
         </div>
