@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body className={`${outfit.className} bg-background text-foreground antialiased min-h-screen relative overflow-x-hidden`}>
         {/* Glowing background elements for the premium layout */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] bg-glow-gradient pointer-events-none z-0" />

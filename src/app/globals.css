@@ -6,6 +6,8 @@
 
 @layer base {
   body {
+    background-color: #94a3b8;
+    color: #1e293b;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
@@ -37,12 +39,7 @@
 /* ---------------------------------------------------- */
 /* LIGHT MODE: Vertical Command Layout Styles         */
 /* ---------------------------------------------------- */
-.light-mode-theme {
-  background-color: #94a3b8;
-  color: #1e293b;
-}
-
-.light-mode-theme .ceramic-slab {
+.ceramic-slab {
   background-color: #cbd5e1;
   border-radius: 40px;
   box-shadow: 
@@ -50,31 +47,31 @@
     -30px -30px 60px #f1f5f9;
 }
 
-.light-mode-theme .etched-text {
+.etched-text {
   color: #475569;
   text-shadow: 1px 1px 1px #f8fafc, -1px -1px 1px #94a3b8;
 }
 
-.light-mode-theme .embossed-panel {
+.embossed-panel {
   background: #cbd5e1;
   box-shadow: 12px 12px 24px #94a3b8, -12px -12px 24px #f8fafc;
   border-radius: 24px;
 }
 
-.light-mode-theme .carved-area {
+.carved-area {
   background: #cbd5e1;
   box-shadow: inset 16px 16px 32px #94a3b8, inset -16px -16px 32px #f8fafc;
   border-radius: 32px;
 }
 
-.light-mode-theme .carved-cell {
+.carved-cell {
   background: #cbd5e1;
   box-shadow: inset 6px 6px 12px #94a3b8, inset -6px -6px 12px #f8fafc;
   border-radius: 12px;
 }
 
 /* Active Checkbox in Light mode */
-.light-mode-theme .jewel-silver {
+.jewel-silver {
   background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 50%, #64748b 100%);
   box-shadow: 
     inset 2px 2px 4px rgba(255,255,255,0.9),
@@ -84,97 +81,10 @@
   position: relative;
 }
 
-.light-mode-theme .jewel-silver::after {
+.jewel-silver::after {
   content: '';
   position: absolute;
   top: 10%; left: 10%; width: 30%; height: 30%;
   background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
   border-radius: 50%;
-}
-
-/* ---------------------------------------------------- */
-/* DARK MODE: Obsidian Monolith Variant Styles          */
-/* ---------------------------------------------------- */
-.dark-mode-theme {
-  background-color: #000000;
-  color: #ffffff;
-}
-
-.dark-mode-theme .ceramic-slab {
-  background-color: #050505;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0px 20px 40px rgba(0,0,0,1),
-    inset 0px 1px 0px rgba(255,255,255,0.05);
-}
-
-.dark-mode-theme .etched-text {
-  color: #888888;
-  text-shadow: 0px -1px 0px rgba(0,0,0,1), 0px 1px 0px rgba(255,255,255,0.1);
-}
-
-.dark-mode-theme .active-text {
-  color: #ffffff;
-  text-shadow: 0px 0px 8px rgba(255,255,255,0.3);
-}
-
-.dark-mode-theme .embossed-panel {
-  background: #0a0a0a;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  border-left: 1px solid rgba(255,255,255,0.05);
-  box-shadow: 
-    4px 4px 12px rgba(0,0,0,0.8), 
-    inset 1px 1px 2px rgba(255,255,255,0.02);
-  border-radius: 12px;
-}
-
-.dark-mode-theme .carved-area {
-  background: #000000;
-  box-shadow: 
-    inset 8px 8px 16px rgba(0,0,0,1), 
-    inset -2px -2px 4px rgba(255,255,255,0.03),
-    0px 1px 0px rgba(255,255,255,0.05);
-  border-radius: 16px;
-}
-
-.dark-mode-theme .carved-cell {
-  background: #030303;
-  box-shadow: 
-    inset 4px 4px 8px rgba(0,0,0,1), 
-    inset -1px -1px 2px rgba(255,255,255,0.08),
-    0px 1px 0px rgba(255,255,255,0.03);
-  border-radius: 8px;
-}
-
-/* Active Checkbox in Dark mode */
-.dark-mode-theme .jewel-active {
-  background: #111111;
-  box-shadow: 
-    inset 1px 1px 2px rgba(255,255,255,0.2),
-    inset -1px -1px 2px rgba(0,0,0,0.8),
-    0px 2px 4px rgba(0,0,0,0.5),
-    0px 0px 15px rgba(255,255,255,0.1);
-  border-top: 1px solid rgba(255,255,255,0.4);
-  position: relative;
-}
-
-.dark-mode-theme .jewel-active::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%; width: 20%; height: 20%;
-  transform: translate(-50%, -50%);
-  background: #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff;
-}
-
-.dark-mode-theme .nav-item {
-  color: #666666;
-  transition: all 0.2s ease;
-}
-
-.dark-mode-theme .nav-item:hover, 
-.dark-mode-theme .nav-item.active {
-  color: #ffffff;
-  text-shadow: 0 0 10px rgba(255,255,255,0.3);
 }
