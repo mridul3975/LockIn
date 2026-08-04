@@ -25,6 +25,7 @@ const DAYS_OF_WEEK = [
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Local state for habit creation form
   const [newHabitName, setNewHabitName] = useState('');
@@ -324,39 +325,48 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* User and logout */}
-            <div className="embossed-panel p-6 flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[#334155]">account_circle</span>
-                <div className="text-left">
-                  <p className="font-label-caps text-[10px] text-[#334155] font-bold">{session?.user?.name || "Jason"}</p>
-                  <p className="font-label-caps text-[8px] text-[#718096]">OPERATOR</p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="w-full py-2 px-4 rounded-xl jewel-silver font-label-caps text-[10px] text-[#334155] font-bold text-center"
-              >
-                DISCONNECT SESSION
-              </button>
-            </div>
           </div>
         </aside>
 
         {/* Main Matrix Area */}
         <div className="flex flex-col gap-8 flex-1">
           {/* Header Area Navigation */}
-          <div className="flex flex-wrap items-center gap-4 lg:justify-end pb-8 lg:border-b lg:border-white/40 lg:shadow-[0_1px_0_rgba(100,116,139,0.3)]">
-            <button
-              onClick={syncWithDb}
-              disabled={isSyncing}
-              className="flex items-center gap-2 carved-cell px-6 py-3 rounded-full hover:scale-95 transition-transform"
-            >
-              <span className={`w-2 h-2 rounded-full jewel-silver ${isSyncing ? 'animate-spin' : ''}`}></span>
-              <span className="font-label-caps text-label-caps etched-text text-[#334155] font-bold">SYNC VECTORS</span>
-            </button>
+          <div className="flex flex-wrap items-center gap-4 lg:justify-end pb-8 lg:border-b lg:border-white/40 lg:shadow-[0_1px_0_rgba(100,116,139,0.3)] relative">
             <div className="flex items-center gap-4 carved-cell px-6 py-3 rounded-full">
               <span className="font-label-caps text-label-caps etched-text text-[#334155] font-bold">WK: {currentWeekDates[0]?.dateString} / {currentWeekDates[6]?.dateString}</span>
+            </div>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="w-10 h-10 rounded-full jewel-silver flex items-center justify-center cursor-pointer hover:scale-95 transition-transform"
+                title="View Profile"
+              >
+                {session?.user?.image ? (
+                  <img
+                    src={session.user.image}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="material-symbols-outlined text-[#334155]">account_circle</span>
+                )}
+              </button>
+
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-3 w-64 embossed-panel p-6 z-50 flex flex-col gap-4 text-left">
+                  <div className="flex flex-col">
+                    <span className="font-label-caps text-[9px] text-[#718096] uppercase font-bold">User Email</span>
+                    <span className="font-mono text-xs text-[#334155] font-bold break-all">{session?.user?.email}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full py-2 px-4 rounded-xl jewel-silver font-label-caps text-[10px] text-[#334155] font-bold text-center hover:scale-95 transition-transform"
+                  >
+                    LOGOUT
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
