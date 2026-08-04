@@ -25,6 +25,8 @@ const DAYS_OF_WEEK = [
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
+
+  // Local state for layout and interactions
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Local state for habit creation form
@@ -118,6 +120,7 @@ export default function Dashboard() {
     return `${year}-${month}-${day}`;
   }
 
+  // Current week dates generator
   function getCurrentWeekDates() {
     const current = new Date();
     const week = [];
@@ -140,7 +143,7 @@ export default function Dashboard() {
     return week;
   }
 
-  // Dynamic metrics calculations
+  // Dynamic calculations
   const todayHabits = habits.filter(h => {
     if (h.frequency === 'daily') return true;
     if (h.frequency === 'specific_days') {
@@ -270,68 +273,124 @@ export default function Dashboard() {
   const strokeDasharray = 301;
   const strokeDashoffset = strokeDasharray - (strokeDasharray * activeComplianceScore) / 100;
 
+  // Shared completion index markup
+  const renderCompletionIndex = () => (
+    <div className="embossed-panel p-6 sm:p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-label-caps text-[10px] etched-text uppercase tracking-[0.2em] text-[#334155] font-bold">Completion IDX</h3>
+        <span className="font-headline-md text-[#334155] etched-text font-bold">{todayCompletionPercentage}%</span>
+      </div>
+      <div className="w-full h-3 carved-cell rounded-full p-0.5 overflow-hidden">
+        <div className="h-full jewel-silver rounded-full shadow-[0_0_12px_rgba(100,116,139,0.8)]" style={{ width: `${todayCompletionPercentage}%` }}></div>
+      </div>
+      <p className="font-label-caps text-[9px] etched-text uppercase mt-4 opacity-80 text-[#334155] font-bold">
+        {todayCompletedCount} / {todayHabits.length} Active
+      </p>
+    </div>
+  );
+
+  // Shared compliance donut gauge markup
+  const renderComplianceIndex = () => (
+    <div className="embossed-panel p-6 sm:p-8 flex flex-col items-center text-center gap-6">
+      <div className="w-full">
+        <h3 className="font-label-caps text-[10px] etched-text uppercase tracking-[0.2em] mb-3 text-[#334155] font-bold text-center">Compliance</h3>
+        <div className="flex p-1 carved-cell rounded-lg mb-2 max-w-[200px] mx-auto">
+          {(['day', 'week', 'month'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setComplianceMode(mode)}
+              className={`flex-1 py-1 font-label-caps text-[8px] rounded transition-all ${
+                complianceMode === mode
+                  ? 'jewel-silver text-slate-800 font-bold'
+                  : 'text-[#718096]'
+              }`}
+            >
+              {mode.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="relative w-32 h-32 carved-cell rounded-full flex items-center justify-center bg-[#cbd5e1]">
+        <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+          <circle className="text-slate-400/40" cx="50%" cy="50%" fill="transparent" r="48" stroke="currentColor" stroke-width="8"></circle>
+          <circle className="text-slate-600 drop-shadow-[0_0_6px_rgba(100,116,139,0.6)]" cx="50%" cy="50%" fill="transparent" r="48" stroke="currentColor" stroke-dasharray={strokeDasharray} stroke-dashoffset={strokeDashoffset} stroke-linecap="round" stroke-width="8"></circle>
+        </svg>
+        <span className="font-label-caps text-[14px] etched-text text-[#334155] font-bold">{activeComplianceScore}%</span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex w-full font-mono bg-[#94a3b8] text-[#1e293b]">
-      <div className="flex flex-col lg:flex-row gap-12 w-full max-w-[1400px] mx-auto p-8 lg:p-12 justify-center items-stretch">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 w-full max-w-[1400px] mx-auto p-4 sm:p-8 lg:p-12 justify-center items-stretch">
         
-        {/* Command Center Sidebar */}
-        <aside className="flex flex-col gap-12 w-full lg:w-[320px] shrink-0">
+        {/* MOBILE TOP BAR (Only visible below lg) */}
+        <header className="lg:hidden w-full flex items-center justify-between pb-6 mb-2 border-b border-white/40 shadow-[0_1px_0_rgba(100,116,139,0.3)] relative">
+          <div>
+            <h1 className="font-headline-md text-xl etched-text tracking-[0.2em] uppercase text-[#334155] font-bold">LOCK//In</h1>
+            <h2 className="font-label-caps text-[9px] text-[#718096] opacity-80 uppercase font-bold mt-1">Platinum Habit Matrix V1.1</h2>
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="w-10 h-10 rounded-full jewel-silver flex items-center justify-center cursor-pointer hover:scale-95 transition-transform"
+              title="View Profile"
+            >
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <span className="material-symbols-outlined text-[#334155]">account_circle</span>
+              )}
+            </button>
+
+            {showProfileMenu && (
+              <div className="absolute right-0 mt-3 w-64 embossed-panel p-6 z-50 flex flex-col gap-4 text-left">
+                <div className="flex flex-col">
+                  <span className="font-label-caps text-[9px] text-[#718096] uppercase font-bold">User Email</span>
+                  <span className="font-mono text-xs text-[#334155] font-bold break-all">{session?.user?.email}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full py-2 px-4 rounded-xl jewel-silver font-label-caps text-[10px] text-[#334155] font-bold text-center hover:scale-95 transition-transform"
+                >
+                  LOGOUT
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Command Center Sidebar (Desktop Only) */}
+        <aside className="hidden lg:flex flex-col gap-12 w-[320px] shrink-0">
           <div className="flex flex-col items-start pb-8 border-b border-white/40 shadow-[0_1px_0_rgba(100,116,139,0.3)]">
             <h1 className="font-headline-md text-xl etched-text tracking-[0.2em] uppercase text-[#334155] font-bold">LOCK//In</h1>
             <h2 className="font-label-caps text-[9px] text-[#718096] opacity-80 uppercase font-bold mt-2">Platinum Habit Matrix V1.1</h2>
           </div>
 
           <div className="flex flex-col gap-8 w-full">
-            {/* Live Completion */}
-            <div className="embossed-panel p-8">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-label-caps text-[10px] etched-text uppercase tracking-[0.2em] text-[#334155] font-bold">Completion IDX</h3>
-                <span className="font-headline-md text-[#334155] etched-text font-bold">{todayCompletionPercentage}%</span>
-              </div>
-              <div className="w-full h-3 carved-cell rounded-full p-0.5 overflow-hidden">
-                <div className="h-full jewel-silver rounded-full shadow-[0_0_12px_rgba(100,116,139,0.8)]" style={{ width: `${todayCompletionPercentage}%` }}></div>
-              </div>
-              <p className="font-label-caps text-[9px] etched-text uppercase mt-4 opacity-80 text-[#334155] font-bold">
-                {todayCompletedCount} / {todayHabits.length} Active
-              </p>
-            </div>
-
-            {/* Compliance Mini Radial */}
-            <div className="embossed-panel p-8 flex flex-col items-center text-center gap-6">
-              <div>
-                <h3 className="font-label-caps text-[10px] etched-text uppercase tracking-[0.2em] mb-2 text-[#334155] font-bold">Compliance</h3>
-                <div className="flex p-1 carved-cell rounded-lg mb-2">
-                  {(['day', 'week', 'month'] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setComplianceMode(mode)}
-                      className={`px-3 py-1 font-label-caps text-[8px] rounded transition-all ${
-                        complianceMode === mode
-                          ? 'jewel-silver text-slate-800 font-bold'
-                          : 'text-[#718096]'
-                      }`}
-                    >
-                      {mode.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="relative w-32 h-32 carved-cell rounded-full flex items-center justify-center">
-                <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                  <circle className="text-slate-400/40" cx="50%" cy="50%" fill="transparent" r="48" stroke="currentColor" stroke-width="8"></circle>
-                  <circle className="text-slate-600 drop-shadow-[0_0_6px_rgba(100,116,139,0.6)]" cx="50%" cy="50%" fill="transparent" r="48" stroke="currentColor" stroke-dasharray={strokeDasharray} stroke-dashoffset={strokeDashoffset} stroke-linecap="round" stroke-width="8"></circle>
-                </svg>
-                <span className="font-label-caps text-[14px] etched-text text-[#334155] font-bold">{activeComplianceScore}%</span>
-              </div>
-            </div>
-
+            {renderCompletionIndex()}
+            {renderComplianceIndex()}
           </div>
         </aside>
 
         {/* Main Matrix Area */}
-        <div className="flex flex-col gap-8 flex-1">
-          {/* Header Area Navigation */}
-          <div className="flex flex-wrap items-center gap-4 lg:justify-end pb-8 lg:border-b lg:border-white/40 lg:shadow-[0_1px_0_rgba(100,116,139,0.3)] relative">
+        <div className="flex flex-col gap-6 lg:gap-8 flex-1 w-full min-w-0">
+          
+          {/* Header Area Navigation (Desktop Only) */}
+          <div className="hidden lg:flex flex-wrap items-center gap-4 justify-end pb-8 border-b border-white/40 shadow-[0_1px_0_rgba(100,116,139,0.3)] relative">
+            <button
+              onClick={syncWithDb}
+              disabled={isSyncing}
+              className="flex items-center gap-2 carved-cell px-6 py-3 rounded-full hover:scale-95 transition-transform"
+            >
+              <span className={`w-2 h-2 rounded-full jewel-silver ${isSyncing ? 'animate-spin' : ''}`}></span>
+              <span className="font-label-caps text-label-caps etched-text text-[#334155] font-bold">SYNC VECTORS</span>
+            </button>
+            
             <div className="flex items-center gap-4 carved-cell px-6 py-3 rounded-full">
               <span className="font-label-caps text-label-caps etched-text text-[#334155] font-bold">WK: {currentWeekDates[0]?.dateString} / {currentWeekDates[6]?.dateString}</span>
             </div>
@@ -370,28 +429,44 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Sync Button & Week Indicator row for Mobile Only */}
+          <div className="lg:hidden flex flex-col sm:flex-row gap-4 w-full">
+            <button
+              onClick={syncWithDb}
+              disabled={isSyncing}
+              className="flex items-center justify-center gap-2 carved-cell w-full py-3 rounded-xl hover:scale-95 transition-transform"
+            >
+              <span className={`w-2 h-2 rounded-full jewel-silver ${isSyncing ? 'animate-spin' : ''}`}></span>
+              <span className="font-label-caps text-[10px] etched-text text-[#334155] font-bold">SYNC VECTORS</span>
+            </button>
+            <div className="flex items-center justify-center gap-2 carved-cell w-full py-3 rounded-xl text-center">
+              <span className="font-label-caps text-[9px] etched-text text-[#334155] font-bold">WK: {currentWeekDates[0]?.dateString} / {currentWeekDates[6]?.dateString}</span>
+            </div>
+          </div>
+
           {/* Carved Matrix */}
-          <div className="carved-area p-6 lg:p-10 w-full flex flex-col gap-8">
-            <div className="overflow-x-auto w-full">
-              <table className="w-full border-separate border-spacing-y-4 border-spacing-x-4">
+          <div className="carved-area p-4 sm:p-6 lg:p-10 w-full flex flex-col gap-6 lg:gap-8">
+            <div className="overflow-x-auto w-full scrollbar-thin">
+              <table className="w-full border-separate border-spacing-y-3 border-spacing-x-2 sm:border-spacing-y-4 sm:border-spacing-x-4 min-w-[640px]">
                 <thead>
                   <tr className="etched-text font-label-caps text-[9px] uppercase tracking-[0.3em] text-[#334155] font-bold">
-                    <th className="text-left py-2 px-4 w-1/4">Identifier</th>
+                    <th className="text-left py-2 px-2 sm:px-4 w-1/4">Identifier</th>
                     {currentWeekDates.map((day, idx) => (
                       <th key={idx} className="text-center">
                         {day.dayOfMonth}<br/>
                         <span className="opacity-70 text-[8px]">{DAYS_OF_WEEK[day.dayOfWeek].label}</span>
                       </th>
                     ))}
+                    <th className="text-right px-2 sm:px-4 w-12">Action</th>
                   </tr>
                 </thead>
                 <tbody className="font-body-md">
                   {habits.map((habit) => (
                     <tr key={habit.id}>
-                      <td className="px-4 py-2">
-                        <div className="flex flex-col">
-                          <span className="text-[#334155] font-body-lg etched-text uppercase tracking-widest font-bold">{habit.name}</span>
-                          <span className="font-label-caps text-[8px] text-[#718096]">
+                      <td className="px-2 sm:px-4 py-2">
+                        <div className="flex flex-col max-w-[120px] sm:max-w-none overflow-hidden">
+                          <span className="text-[#334155] font-body-lg etched-text uppercase tracking-widest font-bold text-xs sm:text-sm truncate">{habit.name}</span>
+                          <span className="font-label-caps text-[8px] text-[#718096] truncate">
                             {habit.frequency === 'daily' && 'DAILY'}
                             {habit.frequency === 'weekly' && 'WEEKLY'}
                             {habit.frequency === 'specific_days' &&
@@ -415,39 +490,46 @@ export default function Dashboard() {
                             {isScheduled ? (
                               <div
                                 onClick={() => handleToggleDay(habit.id, day.dateString)}
-                                className={`mx-auto w-10 h-10 carved-cell rounded-xl cursor-pointer hover:bg-black/5 transition-all flex items-center justify-center ${
+                                className={`mx-auto w-8 h-8 sm:w-10 sm:h-10 carved-cell rounded-xl cursor-pointer hover:bg-black/5 transition-all flex items-center justify-center ${
                                   isCompleted ? 'jewel-silver scale-90' : ''
                                 }`}
                               >
                                 {isCompleted && (
-                                  <span className="w-3 h-3 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,1)]"></span>
+                                  <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,1)]"></span>
                                 )}
                               </div>
                             ) : (
-                              <div className="mx-auto w-10 h-10 flex items-center justify-center text-slate-500/20 select-none">-</div>
+                              <div className="mx-auto w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-slate-500/20 select-none">-</div>
                             )}
                           </td>
                         );
                       })}
-                      <td>
+                      <td className="text-right px-2 sm:px-4">
                         <button
                           onClick={() => deleteHabit(habit.id)}
-                          className="material-symbols-outlined text-[#718096] hover:text-[#991b1b] transition-colors"
+                          className="material-symbols-outlined text-[#718096] hover:text-[#991b1b] transition-colors text-base"
                         >
                           delete
                         </button>
                       </td>
                     </tr>
                   ))}
+                  {habits.length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="text-center py-8 font-label-caps text-[10px] text-[#718096]">
+                        No parameters defined. Deploy one below.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
 
             {/* Creator Form */}
-            <div className="embossed-panel p-6 mt-4">
-              <h3 className="font-headline-md text-sm font-bold text-[#334155] uppercase mb-4">Define Vector</h3>
+            <div className="embossed-panel p-4 sm:p-6 mt-2">
+              <h3 className="font-headline-md text-xs sm:text-sm font-bold text-[#334155] uppercase mb-4">Define Vector</h3>
               <form onSubmit={handleAddHabitSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input
                     type="text"
                     value={newHabitName}
@@ -493,7 +575,7 @@ export default function Dashboard() {
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl jewel-silver font-label-caps text-[10px] text-[#334155] font-bold uppercase"
+                  className="w-full py-2.5 rounded-xl jewel-silver font-label-caps text-[10px] text-[#334155] font-bold uppercase hover:scale-[0.98] transition-transform"
                 >
                   DEPLOY VECTOR
                 </button>
@@ -501,8 +583,8 @@ export default function Dashboard() {
             </div>
 
             {/* Sleep log */}
-            <div className="embossed-panel p-6">
-              <h3 className="font-headline-md text-sm font-bold text-[#334155] uppercase mb-4">Sleep Log Coordinates</h3>
+            <div className="embossed-panel p-4 sm:p-6">
+              <h3 className="font-headline-md text-xs sm:text-sm font-bold text-[#334155] uppercase mb-4">Sleep Log Coordinates</h3>
               <div className="h-32 w-full mb-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sleepGraphData}>
@@ -518,11 +600,11 @@ export default function Dashboard() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-              <form onSubmit={handleSleepSubmit} className="grid grid-cols-3 gap-4 items-end">
+              <form onSubmit={handleSleepSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                 <select
                   value={selectedSleepDate}
                   onChange={(e) => setSelectedSleepDate(e.target.value)}
-                  className="carved-cell rounded-xl px-2 py-2 bg-[#cbd5e1] text-xs text-[#334155] border-0 focus:outline-none"
+                  className="carved-cell rounded-xl px-2 py-2 bg-[#cbd5e1] text-xs text-[#334155] border-0 focus:outline-none w-full"
                 >
                   {currentWeekDates.map(day => (
                     <option key={day.dateString} value={day.dateString}>
@@ -536,11 +618,11 @@ export default function Dashboard() {
                   value={sleepHoursInput}
                   onChange={(e) => setSleepHoursInput(e.target.value)}
                   placeholder="Hours..."
-                  className="carved-cell rounded-xl px-2 py-2 bg-[#cbd5e1] text-xs text-[#334155] border-0 focus:outline-none"
+                  className="carved-cell rounded-xl px-2 py-2 bg-[#cbd5e1] text-xs text-[#334155] border-0 focus:outline-none w-full"
                 />
                 <button
                   type="submit"
-                  className="py-2 rounded-xl jewel-silver font-label-caps text-[9px] text-[#334155] font-bold uppercase"
+                  className="py-2 rounded-xl jewel-silver font-label-caps text-[9px] text-[#334155] font-bold uppercase w-full hover:scale-[0.98] transition-transform"
                 >
                   LOG SLEEP
                 </button>
@@ -548,6 +630,13 @@ export default function Dashboard() {
             </div>
 
           </div>
+
+          {/* MOBILE METRICS LAYOUT (Only visible below lg) */}
+          <div className="lg:hidden flex flex-col gap-6 w-full">
+            {renderCompletionIndex()}
+            {renderComplianceIndex()}
+          </div>
+
         </div>
 
       </div>
