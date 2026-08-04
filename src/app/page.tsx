@@ -1,46 +1,26 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import {
-  Check,
-  Plus,
-  Trash2,
-  Activity,
-  Moon,
-  CheckCircle,
-  AlertCircle,
-  Calendar,
-  TrendingUp,
-  Zap,
-  RefreshCw,
-  LayoutGrid,
-  Settings,
-  ShieldCheck,
-  Sun
-} from 'lucide-react';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import { useHabitStore, Habit, HabitLog } from '@/store/useHabitStore';
 import {
   AreaChart,
   Area,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
+  ResponsiveContainer
 } from 'recharts';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { useHabitStore, Habit, HabitLog } from '@/store/useHabitStore';
 
 // Days of the week utility
 const DAYS_OF_WEEK = [
-  { label: 'Su', name: 'Sunday' },
+  { label: 'SU', name: 'Sunday' },
   { label: 'M', name: 'Monday' },
   { label: 'T', name: 'Tuesday' },
   { label: 'W', name: 'Wednesday' },
-  { label: 'Th', name: 'Thursday' },
+  { label: 'TH', name: 'Thursday' },
   { label: 'F', name: 'Friday' },
-  { label: 'Sa', name: 'Saturday' }
+  { label: 'SA', name: 'Saturday' }
 ];
 
 export default function Dashboard() {
@@ -60,7 +40,9 @@ export default function Dashboard() {
   const [complianceMode, setComplianceMode] = useState<'day' | 'week' | 'month'>('day');
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Active view navigation (for mobile toggle or visual highlighting)
+  const [activeView, setActiveView] = useState<'matrix' | 'trends' | 'compliance' | 'settings'>('matrix');
 
   // Zustand Store
   const {
@@ -79,7 +61,6 @@ export default function Dashboard() {
   // Handle Hydration mismatch prevention
   useEffect(() => {
     setMounted(true);
-    // Set default sleep date to today
     const todayStr = getTodayString();
     setSelectedSleepDate(todayStr);
   }, []);
@@ -98,10 +79,12 @@ export default function Dashboard() {
 
   if (!mounted || status === 'loading') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-screen bg-[#f2f5f9]">
         <div className="flex flex-col items-center gap-3">
-          <RefreshCw className="h-8 w-8 text-cyber-neon animate-spin" />
-          <span className="text-sm font-mono tracking-widest text-slate-400">INITIALIZING SECURE PROTOCOL...</span>
+          <div className="w-12 h-12 rounded-full neumorphic-extruded flex items-center justify-center bg-[#f2f5f9] animate-spin">
+            <span className="material-symbols-outlined text-[#475569]">sync</span>
+          </div>
+          <span className="font-label-caps text-xs text-[#718096]">INITIALIZING PROTOCOL...</span>
         </div>
       </div>
     );
@@ -109,15 +92,19 @@ export default function Dashboard() {
 
   if (status === 'unauthenticated') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black px-4">
-        <div className="border border-slate-800/80 p-8 rounded-xl max-w-sm w-full text-center bg-zinc-950/80">
-          <h1 className="text-3xl font-black font-mono tracking-widest text-slate-200 mb-8">
-            LOCK<span className="text-slate-500">//</span>In
+      <div className="flex items-center justify-center min-h-screen bg-[#f2f5f9] px-4">
+        <div className="p-10 rounded-3xl neumorphic-extruded max-w-sm w-full text-center bg-[#f2f5f9]">
+          <h1 className="font-headline-lg text-3xl font-black text-[#475569] tracking-tighter mb-1">
+            LOCK//In
           </h1>
+          <p className="font-label-caps text-[10px] text-[#718096] uppercase tracking-widest mb-8">
+            PLATINUM V1.1
+          </p>
           <button
             onClick={() => signIn('google')}
-            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-200 text-slate-950 font-mono font-bold text-sm py-3 rounded-lg border border-slate-300 transition-all shadow-sm"
+            className="w-full flex items-center justify-center gap-3 bg-[#f2f5f9] hover:bg-[#e4e7ea] text-[#475569] font-label-caps font-bold py-4 px-6 rounded-xl neumorphic-extruded active:neumorphic-inset transition-all"
           >
+            <span className="material-symbols-outlined text-lg">login</span>
             Sign in with Google
           </button>
         </div>
@@ -141,7 +128,6 @@ export default function Dashboard() {
   function getCurrentWeekDates() {
     const current = new Date();
     const week = [];
-    // Distance to Sunday
     const distanceToSunday = current.getDay();
     const sunday = new Date(current);
     sunday.setDate(current.getDate() - distanceToSunday);
@@ -183,15 +169,6 @@ export default function Dashboard() {
     : 0;
 
   // Monthly Score Donut Data (Calculated based on logs this calendar month)
-  const currentMonthLogs = logs.filter(l => {
-    const logDate = new Date(l.date);
-    const now = new Date();
-    return logDate.getMonth() === now.getMonth() && logDate.getFullYear() === now.getFullYear();
-  });
-
-  // Calculate target days of compliance in this month up to today
-  // Let's compute a dynamic performance compliance score:
-  // (Actual Completed Logs in current month) / (Total target occurrences in current month)
   const computeMonthlyComplianceScore = () => {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -201,7 +178,6 @@ export default function Dashboard() {
     let totalTargetOccurrences = 0;
     let actualCompletedOccurrences = 0;
 
-    // Filter active habits
     for (let d = 1; d <= todayDay; d++) {
       const dateVal = new Date(currentYear, currentMonth, d);
       const dayOfWeek = dateVal.getDay();
@@ -214,7 +190,6 @@ export default function Dashboard() {
         } else if (h.frequency === 'specific_days') {
           isHabitActiveOnDay = h.frequencyDays.includes(dayOfWeek);
         } else if (h.frequency === 'weekly') {
-          // Approximate weekly as active on Sundays
           isHabitActiveOnDay = dayOfWeek === 0;
         }
 
@@ -235,7 +210,6 @@ export default function Dashboard() {
   const monthlyScore = computeMonthlyComplianceScore();
 
   // Weekly Completion Statistics
-  const weeklyHabitCount = habits.length;
   let weeklyCompletedCount = 0;
   let weeklyTotalTarget = 0;
 
@@ -263,11 +237,6 @@ export default function Dashboard() {
       : complianceMode === 'week'
         ? (weeklyTotalTarget > 0 ? Math.round((weeklyCompletedCount / weeklyTotalTarget) * 100) : 0)
         : monthlyScore;
-
-  const donutData = [
-    { name: 'Completed', value: activeComplianceScore, color: '#10B981' },
-    { name: 'Remaining', value: 100 - activeComplianceScore, color: '#1e293b' }
-  ];
 
   // Touch swipe handlers for shifting compliance mode
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -322,7 +291,6 @@ export default function Dashboard() {
     if (!newHabitName.trim()) return;
     addHabit(newHabitName, newHabitFreq, selectedDays);
     setNewHabitName('');
-    // Reset selections
     setNewHabitFreq('daily');
     setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
   };
@@ -343,176 +311,175 @@ export default function Dashboard() {
     }
   };
 
-  const themeClass = isDarkMode ? 'dark-theme' : 'light-theme';
+  // Donut chart path calculation to avoid heavy Recharts dependency for the exact neumorphic svg look
+  const strokeDasharray = 452;
+  const strokeDashoffset = strokeDasharray - (strokeDasharray * activeComplianceScore) / 100;
 
   return (
-    <div className={`${themeClass} min-h-screen flex w-full font-mono transition-all duration-300`}>
-      
-      {/* LEFT SIDEBAR PANEL */}
-      <aside className="w-64 sidebar hidden md:flex flex-col justify-between p-6 shrink-0">
-        <div className="space-y-8">
-          
-          {/* Logo & Subtitle */}
-          <div>
-            <h1 className={`text-2xl font-black font-mono tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              LOCK<span className="text-slate-400">//</span>In
-            </h1>
-            <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-0.5">
-              OPERATOR V1.1
-            </div>
-          </div>
+    <div className="flex min-h-screen bg-[#f2f5f9] text-[#2c3e50] w-full font-sans">
 
-          {/* User Profile Card */}
-          <div className="flex items-center gap-3 bg-slate-950/5 p-3 rounded-lg border border-slate-300/30">
+      {/* SideNavBar (Platform Anchor) */}
+      <aside className="hidden md:flex flex-col p-8 gap-6 h-screen sticky top-0 w-64 bg-[#f2f5f9] neumorphic-extruded z-50 border-r border-white/20 shrink-0">
+        <div className="mb-6">
+          <h1 className="font-headline-md text-2xl font-black text-[#475569] tracking-tighter">LOCK//In</h1>
+          <p className="font-label-caps text-[10px] text-[#718096] mt-1">PLATINUM V1.1</p>
+        </div>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-full neumorphic-extruded flex items-center justify-center bg-[#f2f5f9]">
             {session?.user?.image ? (
               <img
                 src={session.user.image}
                 alt="User Profile"
-                className="w-10 h-10 rounded-full border border-slate-300/80 shadow-sm"
+                className="w-10 h-10 rounded-full object-cover"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-mono font-bold text-slate-600 border border-slate-300">
-                U
-              </div>
+              <span className="material-symbols-outlined text-[#475569] text-xl">person</span>
             )}
-            <div>
-              <div className="text-sm font-mono font-bold text-slate-800">
-                {session?.user?.name || "Jason"}
-              </div>
-              <div className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">
-                Operator
-              </div>
-            </div>
           </div>
-
-          {/* Navigation Links */}
-          <nav className="space-y-2">
-            <button className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-mono font-bold uppercase transition-all ${
-              isDarkMode 
-                ? 'bg-cyber-neon/10 border border-cyber-neon/30 text-cyber-neon' 
-                : 'bg-white border border-slate-300/80 text-slate-800 shadow-sm'
-            }`}>
-              <LayoutGrid className="h-4 w-4" />
-              <span>MATRIX</span>
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-mono font-bold uppercase text-slate-400 hover:text-slate-600 transition-all">
-              <TrendingUp className="h-4 w-4" />
-              <span>TRENDS</span>
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-mono font-bold uppercase text-slate-400 hover:text-slate-600 transition-all">
-              <ShieldCheck className="h-4 w-4" />
-              <span>COMPLIANCE</span>
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-mono font-bold uppercase text-slate-400 hover:text-slate-600 transition-all">
-              <Settings className="h-4 w-4" />
-              <span>SETTINGS</span>
-            </button>
-          </nav>
+          <div>
+            <p className="font-body-md text-sm font-bold text-[#2d3748] leading-tight">
+              {session?.user?.name || "Jason"}
+            </p>
+            <p className="font-label-caps text-[9px] text-[#718096]">Operator</p>
+          </div>
         </div>
-
-        {/* Theme Switcher Toggle at bottom */}
-        <div className="border-t border-slate-300/30 pt-4">
+        <nav className="flex flex-col gap-4">
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-slate-300/60 bg-white hover:bg-slate-50 text-xs font-mono font-bold uppercase text-slate-600 transition-all shadow-sm"
+            onClick={() => setActiveView('matrix')}
+            className={`flex items-center gap-3 text-left w-full rounded-xl p-4 transition-all hover:scale-[1.02] ${
+              activeView === 'matrix'
+                ? 'text-[#475569] bg-[#f2f5f9] neumorphic-inset'
+                : 'text-[#718096]'
+            }`}
           >
-            {isDarkMode ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4 text-slate-700" />}
-            <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: activeView === 'matrix' ? "'FILL' 1" : "'FILL' 0" }}>grid_view</span>
+            <span className="font-label-caps text-[10px] uppercase font-bold">Matrix</span>
+          </button>
+          <button
+            onClick={() => setActiveView('trends')}
+            className={`flex items-center gap-3 text-left w-full rounded-xl p-4 transition-all hover:scale-[1.02] ${
+              activeView === 'trends'
+                ? 'text-[#475569] bg-[#f2f5f9] neumorphic-inset'
+                : 'text-[#718096]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: activeView === 'trends' ? "'FILL' 1" : "'FILL' 0" }}>trending_up</span>
+            <span className="font-label-caps text-[10px] uppercase font-bold">Trends</span>
+          </button>
+          <button
+            onClick={() => setActiveView('compliance')}
+            className={`flex items-center gap-3 text-left w-full rounded-xl p-4 transition-all hover:scale-[1.02] ${
+              activeView === 'compliance'
+                ? 'text-[#475569] bg-[#f2f5f9] neumorphic-inset'
+                : 'text-[#718096]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: activeView === 'compliance' ? "'FILL' 1" : "'FILL' 0" }}>verified</span>
+            <span className="font-label-caps text-[10px] uppercase font-bold">Compliance</span>
+          </button>
+          <button
+            onClick={() => setActiveView('settings')}
+            className={`flex items-center gap-3 text-left w-full rounded-xl p-4 transition-all hover:scale-[1.02] ${
+              activeView === 'settings'
+                ? 'text-[#475569] bg-[#f2f5f9] neumorphic-inset'
+                : 'text-[#718096]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: activeView === 'settings' ? "'FILL' 1" : "'FILL' 0" }}>settings</span>
+            <span className="font-label-caps text-[10px] uppercase font-bold">Settings</span>
+          </button>
+        </nav>
+        <div className="mt-auto">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 text-[#718096] p-4 w-full hover:scale-[1.02] transition-transform text-left"
+          >
+            <span className="material-symbols-outlined text-lg">logout</span>
+            <span className="font-label-caps text-[10px] uppercase font-bold">Logout</span>
           </button>
         </div>
       </aside>
 
-      {/* MAIN MAIN CONTENT CONTAINER */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+      {/* Main Content Area */}
+      <main className="flex-1 w-full max-w-[1440px] mx-auto overflow-y-auto pb-24 md:pb-8">
         
-        {/* Top Navigation Row */}
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between pb-6 mb-8 gap-4 border-b border-slate-300/30">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className={`text-2xl font-black font-mono tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                DAILY HABIT MATRIX
-              </h2>
-              <span className="h-2.5 w-2.5 rounded-full bg-cyber-neon animate-pulse" />
+        {/* TopNavBar */}
+        <header className="w-full sticky top-0 bg-[#f2f5f9] z-40 px-8 py-6 flex justify-between items-center shadow-[inset_0_-1px_0_rgba(255,255,255,0.4)] md:shadow-none">
+          <div className="flex flex-col">
+            <h2 className="font-headline-md text-2xl font-bold tracking-tighter text-[#475569] uppercase drop-shadow-sm">Daily Habit Matrix</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-2 h-2 rounded-full silver-gradient animate-pulse shadow-sm"></span>
+              <span className="font-label-caps text-[10px] text-[#718096]">FOCUSED STATUS</span>
             </div>
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-1">
-              • ACTIVE PROTOCOL
-            </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            {/* Sync Action */}
-            <button
-              onClick={syncWithDb}
-              disabled={isSyncing}
-              className="flex items-center gap-2 font-mono text-xs font-bold px-3 py-2 rounded-lg transition-all border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 shadow-sm"
-            >
-              <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>SYNC</span>
-            </button>
-            
-            <button
-              onClick={handleLogout}
-              className="font-mono text-xs font-bold px-3 py-2 rounded-lg border border-red-300/40 bg-red-100 hover:bg-red-200 text-red-700 transition-all"
-            >
-              LOGOUT
-            </button>
+          <div className="flex items-center gap-6">
+            <div className="hidden lg:flex items-center gap-3 px-6 py-4 neumorphic-inset rounded-full">
+              <span className="material-symbols-outlined text-[#718096] text-sm">calendar_today</span>
+              <span className="font-label-caps text-[10px] text-[#2d3748]">WEEK INDEX: {currentWeekDates[0]?.dateString} to {currentWeekDates[6]?.dateString}</span>
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={syncWithDb}
+                disabled={isSyncing}
+                className="px-8 py-4 neumorphic-extruded active:neumorphic-inset rounded-xl text-[#475569] font-label-caps font-bold transition-all flex items-center gap-2"
+              >
+                <span className={`material-symbols-outlined text-sm ${isSyncing ? 'animate-spin' : ''}`}>sync</span>
+                SYNC
+              </button>
+            </div>
           </div>
         </header>
 
-        {/* Main Columns Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Content Columns */}
+        <div className="p-8 grid grid-cols-12 gap-6">
           
-          {/* Column 1: Habit Matrix & Creator */}
-          <div className="lg:col-span-2 space-y-8">
+          {/* Column 1: Habit Matrix & Form (8 Cols) */}
+          <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
             
-            {/* Habit Table plate */}
-            <div className="glass-card rounded-xl p-6 transition-all">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-slate-400" />
-                  <h3 className={`text-md font-mono font-bold tracking-widest uppercase ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                    Daily Habit Matrix
-                  </h3>
-                </div>
-              </div>
-
+            {/* Habit Table Container */}
+            <div className="bg-[#f2f5f9] p-8 rounded-3xl neumorphic-extruded">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-separate border-spacing-y-4 border-spacing-x-1">
                   <thead>
-                    <tr className="border-b border-slate-300/20 pb-3">
-                      <th className="text-left font-mono text-xs text-slate-500 font-semibold uppercase pb-3 pr-4">Habit</th>
+                    <tr className="text-[#718096] font-label-caps text-[10px] uppercase tracking-[0.2em]">
+                      <th className="text-left py-2 px-4 w-1/4">Habit</th>
                       {currentWeekDates.map((day, idx) => {
                         const isToday = day.dateString === todayDateStr;
                         return (
-                          <th key={idx} className={`text-center pb-3 px-1 ${isToday && !isDarkMode ? 'highlight-day-col rounded-t-lg' : ''}`}>
-                            <div className="flex flex-col items-center justify-center p-1.5 min-w-[44px]">
-                              <span className={`text-xs font-mono font-bold uppercase ${isToday ? 'text-slate-800' : 'text-slate-400'}`}>
-                                {DAYS_OF_WEEK[day.dayOfWeek].label}
-                              </span>
-                              <span className={`text-[10px] font-mono mt-0.5 ${isToday ? 'text-slate-700' : 'text-slate-600'}`}>
-                                {day.dayOfMonth}
-                              </span>
-                            </div>
+                          <th key={idx} className="text-center py-2">
+                            {isToday ? (
+                              <div className="bg-[#94a3b8]/5 p-2 rounded-xl text-[#475569] neumorphic-inset-sm inline-block min-w-[48px]">
+                                {day.dayOfMonth}<br/>
+                                <span className="text-[9px] font-bold">{DAYS_OF_WEEK[day.dayOfWeek].label}</span>
+                              </div>
+                            ) : (
+                              <div className="min-w-[48px]">
+                                {day.dayOfMonth}<br/>
+                                <span className="text-[9px] text-[#718096]">{DAYS_OF_WEEK[day.dayOfWeek].label}</span>
+                              </div>
+                            )}
                           </th>
                         );
                       })}
-                      <th className="text-center font-mono text-xs text-slate-500 font-semibold uppercase pb-3 pl-4">Actions</th>
+                      <th className="text-right px-4">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-300/10">
+                  <tbody className="font-body-md text-sm">
                     {habits.map((habit) => (
-                      <tr key={habit.id} className="group hover:bg-slate-900/5 transition-all">
-                        <td className="py-4 pr-4">
-                          <div className={`font-mono text-sm font-medium ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{habit.name}</div>
-                          <div className="text-[10px] font-mono text-slate-500 mt-0.5 uppercase tracking-wide">
-                            {habit.frequency === 'daily' && 'Daily'}
-                            {habit.frequency === 'weekly' && 'Weekly'}
-                            {habit.frequency === 'specific_days' &&
-                              `Days: ${habit.frequencyDays.map(d => DAYS_OF_WEEK[d].label).join(', ')}`
-                            }
+                      <tr key={habit.id} className="group">
+                        <td className="px-4 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-[#2d3748] font-bold drop-shadow-sm">{habit.name}</span>
+                            <span className="font-label-caps text-[9px] text-[#718096]">
+                              {habit.frequency === 'daily' && 'DAILY'}
+                              {habit.frequency === 'weekly' && 'WEEKLY'}
+                              {habit.frequency === 'specific_days' &&
+                                `DAYS: ${habit.frequencyDays.map(d => DAYS_OF_WEEK[d].label).join(', ')}`
+                              }
+                            </span>
                           </div>
                         </td>
-
+                        
                         {currentWeekDates.map((day, idx) => {
                           let isScheduled = false;
                           if (habit.frequency === 'daily') isScheduled = true;
@@ -522,36 +489,33 @@ export default function Dashboard() {
                           const isCompleted = logs.some(
                             (l) => l.habitId === habit.id && l.date === day.dateString && l.completed
                           );
-                          const isToday = day.dateString === todayDateStr;
 
                           return (
-                            <td key={idx} className={`text-center py-2 px-1 ${isToday && !isDarkMode ? 'highlight-day-col' : ''}`}>
+                            <td key={idx} className="text-center">
                               {isScheduled ? (
-                                <button
-                                  type="button"
+                                <div
                                   onClick={() => handleToggleDay(habit.id, day.dateString)}
-                                  className={`w-8 h-8 rounded flex items-center justify-center transition-all ${
-                                    isCompleted
-                                      ? 'neu-checkbox-checked font-bold'
-                                      : 'neu-checkbox-unchecked'
+                                  className={`mx-auto w-10 h-10 neumorphic-inset rounded-xl cursor-pointer flex items-center justify-center transition-all hover:scale-95 ${
+                                    isCompleted ? 'silver-gradient scale-95 shadow-[inset_4px_4px_8px_rgba(0,0,0,0.4),inset_-4px_-4px_8px_rgba(255,255,255,0.2)]' : 'hover:bg-black/5'
                                   }`}
                                 >
-                                  {isCompleted && <Check className="h-4 w-4 stroke-[3px]" />}
-                                </button>
+                                  {isCompleted && (
+                                    <span className="material-symbols-outlined text-white text-lg font-bold drop-shadow-md">check</span>
+                                  )}
+                                </div>
                               ) : (
-                                <div className="w-8 h-8 flex items-center justify-center text-slate-400/30 text-xs font-mono font-bold select-none">
-                                  //
+                                <div className="mx-auto w-10 h-10 flex items-center justify-center text-[#718096]/20 font-mono text-xs select-none">
+                                  -
                                 </div>
                               )}
                             </td>
                           );
                         })}
 
-                        <td className="text-center py-2 pl-4">
+                        <td className="text-right px-4">
                           <button
                             onClick={() => deleteHabit(habit.id)}
-                            className="text-xs font-mono text-slate-400 hover:text-red-500 uppercase font-bold transition-all"
-                            title="Purge Habit"
+                            className="material-symbols-outlined text-[#718096] opacity-30 hover:opacity-100 cursor-pointer transition-opacity text-lg"
                           >
                             delete
                           </button>
@@ -559,88 +523,52 @@ export default function Dashboard() {
                       </tr>
                     ))}
 
-                    {/* Ghost Rows for Demo */}
                     {habits.length === 0 && (
-                      <>
-                        {[
-                          'Wake up at 5:30',
-                          'Gym Training',
-                          'Project Deep Work',
-                          'Drink 4L Water'
-                        ].map((ghostName, idx) => (
-                          <tr key={`ghost-${idx}`} className="opacity-30 select-none pointer-events-none border-b border-slate-300/10">
-                            <td className="py-4 pr-4">
-                              <div className="font-mono text-sm font-medium text-slate-600 italic">{ghostName}</div>
-                              <div className="text-[10px] font-mono text-slate-400 mt-0.5 uppercase tracking-wide">Daily</div>
-                            </td>
-                            {currentWeekDates.map((day, dayIdx) => {
-                              const isToday = day.dateString === todayDateStr;
-                              return (
-                                <td key={dayIdx} className={`text-center py-2 px-1 ${isToday && !isDarkMode ? 'highlight-day-col' : ''}`}>
-                                  <div className={`w-8 h-8 rounded mx-auto flex items-center justify-center ${
-                                    isDarkMode 
-                                      ? 'border border-slate-800 bg-slate-950/20' 
-                                      : 'neu-checkbox-unchecked'
-                                  } text-transparent`}>
-                                    <Check className="h-4 w-4" />
-                                  </div>
-                                </td>
-                              );
-                            })}
-                            <td className="text-center py-2 pl-4">
-                              <span className="text-xs font-mono text-slate-300 uppercase">delete</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </>
+                      <tr className="opacity-40">
+                        <td colSpan={9} className="text-center py-8 font-label-caps text-xs text-[#718096]">
+                          NO ACTIVE HABITS. CREATE A PARAMETER BELOW.
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* Creator form */}
-            <div className="glass-card rounded-xl p-6 transition-all">
-              <h3 className={`text-md font-mono font-bold tracking-widest uppercase mb-4 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                New Habit
+            {/* Habit Creator Form Card */}
+            <div className="bg-[#f2f5f9] p-8 rounded-3xl neumorphic-extruded">
+              <h3 className="font-headline-md text-lg font-bold tracking-tighter text-[#475569] uppercase mb-6">
+                Define New Parameter
               </h3>
-              <form onSubmit={handleAddHabitSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleAddHabitSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-mono text-slate-400 uppercase tracking-widest mb-1.5">Habit Label</label>
+                    <label className="block font-label-caps text-[9px] text-[#718096] uppercase tracking-widest mb-2">Habit Name</label>
                     <input
                       type="text"
                       value={newHabitName}
                       onChange={(e) => setNewHabitName(e.target.value)}
-                      placeholder="e.g. Meditate 15m"
-                      className={`w-full border rounded px-3 py-2 text-sm font-mono ${
-                        isDarkMode 
-                          ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-700 focus:border-cyber-neon' 
-                          : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400 focus:border-slate-500 font-mono shadow-inner'
-                      }`}
+                      placeholder="e.g. Wake up at 5:30"
+                      className="w-full neumorphic-inset rounded-xl px-4 py-3 bg-[#f2f5f9] text-sm text-[#2d3748] placeholder-[#718096]/50 focus:outline-none border-0"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono text-slate-400 uppercase tracking-widest mb-1.5">Frequency</label>
+                    <label className="block font-label-caps text-[9px] text-[#718096] uppercase tracking-widest mb-2">Frequency Matrix</label>
                     <select
                       value={newHabitFreq}
                       onChange={(e) => setNewHabitFreq(e.target.value as any)}
-                      className={`w-full border rounded px-3 py-2 text-sm font-mono ${
-                        isDarkMode 
-                          ? 'bg-slate-950 border-slate-800 text-white focus:border-cyber-neon' 
-                          : 'bg-white border-slate-300 text-slate-800 focus:border-slate-500 font-mono shadow-sm'
-                      }`}
+                      className="w-full neumorphic-inset rounded-xl px-4 py-3 bg-[#f2f5f9] text-sm text-[#2d3748] focus:outline-none border-0"
                     >
                       <option value="daily">Daily Loop</option>
-                      <option value="weekly">Weekly Checklist</option>
-                      <option value="specific_days">Specific Days</option>
+                      <option value="weekly">Weekly Cycle</option>
+                      <option value="specific_days">Specific Vectors</option>
                     </select>
                   </div>
                 </div>
 
                 {newHabitFreq === 'specific_days' && (
                   <div className="space-y-2">
-                    <label className="block text-xs font-mono text-slate-400 uppercase tracking-widest">Active Week Days</label>
+                    <label className="block font-label-caps text-[9px] text-[#718096] uppercase tracking-widest">Active Vector Days</label>
                     <div className="flex flex-wrap gap-2">
                       {DAYS_OF_WEEK.map((day, idx) => {
                         const active = selectedDays.includes(idx);
@@ -649,10 +577,10 @@ export default function Dashboard() {
                             key={idx}
                             type="button"
                             onClick={() => toggleDaySelection(idx)}
-                            className={`px-3 py-1.5 rounded text-xs font-mono font-bold transition-all ${
+                            className={`px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
                               active
-                                ? 'bg-cyber-neon text-slate-950 font-bold'
-                                : 'bg-slate-900 text-slate-500 border border-slate-800 hover:border-slate-700'
+                                ? 'silver-gradient text-white shadow-md'
+                                : 'neumorphic-extruded text-[#718096]'
                             }`}
                           >
                             {day.name}
@@ -665,138 +593,131 @@ export default function Dashboard() {
 
                 <button
                   type="submit"
-                  className={`flex items-center gap-2 font-mono font-bold text-xs uppercase px-4 py-2.5 rounded transition-all shadow-sm ${
-                    isDarkMode 
-                      ? 'bg-cyber-neon hover:bg-emerald-400 text-slate-950 shadow-neon-glow' 
-                      : 'bg-slate-800 hover:bg-slate-700 text-white'
-                  }`}
+                  className="px-6 py-3 font-label-caps font-bold text-xs uppercase bg-[#f2f5f9] text-[#475569] neumorphic-extruded active:neumorphic-inset rounded-xl flex items-center gap-2 hover:scale-[1.02] transition-transform"
                 >
-                  <Plus className="h-4 w-4" /> Add Habit
+                  <span className="material-symbols-outlined text-sm">add</span> Add Parameter
                 </button>
               </form>
             </div>
+
           </div>
 
-          {/* Column 2: Analytics & Sleep */}
-          <div className="space-y-8">
+          {/* Column 2: Analytics Sideboard (4 Cols) */}
+          <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
             
-            {/* Live Progress Card */}
-            <div className="glass-card rounded-xl p-6 transition-all">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-mono text-slate-400 tracking-wider uppercase">PROTOCOL PROGRESS</span>
-                <span className="text-sm font-mono text-slate-800 font-bold">{todayCompletionPercentage}%</span>
+            {/* Completion Index Card */}
+            <div className="bg-[#f2f5f9] p-8 rounded-3xl neumorphic-extruded">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="font-label-caps text-[10px] text-[#718096] uppercase tracking-widest">Completion Index</h3>
+                <span className="font-headline-md text-xl font-bold text-[#475569]">{todayCompletionPercentage}%</span>
               </div>
-              <h4 className={`text-md font-mono font-bold tracking-widest uppercase mb-1 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                Current Matrix
-              </h4>
-              <p className="text-[10px] font-mono text-slate-500 mb-4 uppercase">
-                {todayCompletedCount} OF {todayHabits.length || 4} PARAMETERS MET
-              </p>
-              <div className="w-full h-3 bg-slate-950/10 rounded-full overflow-hidden border border-slate-300/30 p-[1px]">
+              <div className="mb-6">
+                <h4 className="font-headline-md text-lg font-bold text-[#2d3748] leading-tight">Today's Matrix</h4>
+                <p className="font-label-caps text-[9px] text-[#718096] uppercase mt-2">Completed: {todayCompletedCount} / {todayHabits.length} Active</p>
+              </div>
+              <div className="w-full h-6 neumorphic-inset rounded-full p-1 overflow-hidden">
                 <div
-                  className="h-full bg-slate-400/60 rounded-full transition-all duration-500 shadow-sm"
+                  className="h-full silver-gradient rounded-full shadow-[0_0_12px_rgba(148,163,184,0.6)] transition-all duration-1000"
                   style={{ width: `${todayCompletionPercentage}%` }}
-                />
+                ></div>
               </div>
             </div>
 
-            {/* Compliance card */}
-            <div 
+            {/* Compliance Radial Donut Card */}
+            <div
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              className="glass-card rounded-xl p-6 transition-all flex flex-col items-center select-none"
+              className="bg-[#f2f5f9] p-8 rounded-3xl neumorphic-extruded flex flex-col select-none"
             >
-              <div className="w-full flex items-center justify-between mb-4">
+              <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-slate-500" />
-                  <h3 className={`text-sm font-mono font-bold tracking-widest uppercase ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                    PERFORMANCE
-                  </h3>
+                  <span className="material-symbols-outlined text-[#475569] text-sm">trending_up</span>
+                  <h3 className="font-label-caps text-[10px] text-[#2d3748] uppercase font-bold">Compliance</h3>
                 </div>
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">STEEL INDEX</span>
+                <span className="font-label-caps text-[9px] text-[#718096]">PLATINUM INDEX</span>
               </div>
-
-              {/* Slider switch */}
-              <div className="flex bg-slate-950/5 p-1 rounded-lg border border-slate-300/60 mb-6 w-full shadow-inner">
-                {(['day', 'week', 'month'] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setComplianceMode(mode)}
-                    className={`flex-1 text-center py-1.5 rounded-md text-xs font-mono font-bold transition-all uppercase ${
-                      complianceMode === mode
-                        ? (isDarkMode 
-                            ? 'bg-cyber-neon text-slate-950 shadow-neon-glow' 
-                            : 'bg-white text-slate-800 border border-slate-300 shadow-sm')
-                        : 'text-slate-400 hover:text-slate-600'
-                    }`}
-                  >
-                    {mode}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative w-40 h-40 flex items-center justify-center cursor-ew-resize">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={donutData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={70}
-                      startAngle={90}
-                      endAngle={-270}
-                      paddingAngle={0}
-                      dataKey="value"
+              
+              <div className="flex justify-center mb-8">
+                <div className="flex p-1 neumorphic-inset rounded-xl">
+                  {(['day', 'week', 'month'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setComplianceMode(mode)}
+                      className={`px-5 py-2 font-label-caps text-[9px] rounded-lg transition-all ${
+                        complianceMode === mode
+                          ? 'silver-gradient text-white shadow-sm'
+                          : 'text-[#718096]'
+                      }`}
                     >
-                      {donutData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.name === 'Completed' ? (isDarkMode ? '#10B981' : '#64748b') : (isDarkMode ? '#1e293b' : '#cbd5e1')} 
-                        />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute flex flex-col items-center justify-center">
-                  <span className={`text-3xl font-black font-mono tracking-tighter ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                    {activeComplianceScore}%
-                  </span>
-                  <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest text-center mt-0.5">
-                    COMPLIANCE
-                  </span>
+                      {mode.toUpperCase()}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="text-[9px] font-mono text-slate-400 mt-2">
-                ← Swipe donut to change cycle →
-              </div>
-
-              <div className="w-full grid grid-cols-2 gap-4 mt-4 text-center border-t border-slate-300/30 pt-4">
-                <div>
-                  <div className="text-xs font-mono text-slate-400 uppercase mb-0.5">MET</div>
-                  <div className={`text-lg font-mono font-bold ${isDarkMode ? 'text-cyber-neon' : 'text-slate-700'}`}>
-                    {weeklyCompletedCount}
+              <div className="relative flex items-center justify-center py-6">
+                {/* Outer ring */}
+                <div className="w-48 h-48 rounded-full neumorphic-extruded flex items-center justify-center bg-[#f2f5f9]">
+                  {/* Inner ring */}
+                  <div className="w-36 h-36 rounded-full neumorphic-inset flex flex-col items-center justify-center relative bg-[#f2f5f9]">
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                      <circle
+                        className="text-[#94a3b8]/10"
+                        cx="50%"
+                        cy="50%"
+                        fill="transparent"
+                        r="62"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                      ></circle>
+                      <circle
+                        className="text-[#475569]/80 drop-shadow-[0_0_10px_rgba(148,163,184,0.5)]"
+                        cx="50%"
+                        cy="50%"
+                        fill="transparent"
+                        r="62"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        strokeDasharray={strokeDasharray}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                      ></circle>
+                    </svg>
+                    <span className="font-headline-lg text-2xl font-black text-[#2d3748]">{activeComplianceScore}%</span>
+                    <span className="font-label-caps text-[8px] text-[#718096] uppercase mt-1">
+                      {complianceMode === 'day' ? 'Day Score' : complianceMode === 'week' ? 'Week Score' : 'Month Score'}
+                    </span>
                   </div>
                 </div>
-                <div>
-                  <div className="text-xs font-mono text-slate-400 uppercase mb-0.5 text-red-500">MISSED</div>
-                  <div className={`text-lg font-mono font-bold ${isDarkMode ? 'text-cyber-rose' : 'text-red-600'}`}>
-                    {weeklyMissedCount}
-                  </div>
+              </div>
+
+              <p className="text-center font-label-caps text-[9px] text-[#718096] mb-6 opacity-75">
+                Swipe compliance vector or click toggle
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-white/40 pt-6">
+                <div className="text-center">
+                  <p className="font-label-caps text-[9px] text-[#718096] uppercase">Completed</p>
+                  <p className="font-headline-md text-lg font-bold text-[#475569] mt-1">
+                    {complianceMode === 'day' ? todayCompletedCount : complianceMode === 'week' ? weeklyCompletedCount : monthlyScore}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="font-label-caps text-[9px] text-red-600 uppercase">Missed</p>
+                  <p className="font-headline-md text-lg font-bold text-[#991b1b]/80 mt-1">
+                    {complianceMode === 'day' ? (todayHabits.length - todayCompletedCount) : complianceMode === 'week' ? weeklyMissedCount : '-'}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Sleep card */}
-            <div className="glass-card rounded-xl p-6 transition-all">
-              <div className="flex items-center gap-2 mb-4">
-                <Moon className="h-5 w-5 text-slate-500" />
-                <h3 className={`text-md font-mono font-bold tracking-widest uppercase ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                  Sleep Schedule
-                </h3>
+            {/* Sleep Schedule Neumorphic Card */}
+            <div className="bg-[#f2f5f9] p-8 rounded-3xl neumorphic-extruded">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="material-symbols-outlined text-[#718096] text-lg">bedtime</span>
+                <h3 className="font-headline-md text-lg font-bold text-[#475569] uppercase">Sleep Coordinates</h3>
               </div>
 
               <div className="h-40 w-full mb-6">
@@ -804,48 +725,45 @@ export default function Dashboard() {
                   <AreaChart data={sleepGraphData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                     <defs>
                       <linearGradient id="sleepColor" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={isDarkMode ? '#3B82F6' : '#64748b'} stopOpacity={0.4} />
-                        <stop offset="95%" stopColor={isDarkMode ? '#3B82F6' : '#64748b'} stopOpacity={0} />
+                        <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#94a3b8" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="name" stroke="#64748b" fontSize={10} fontFamily="monospace" tickLine={false} />
-                    <YAxis stroke="#64748b" fontSize={10} fontFamily="monospace" tickLine={false} domain={[0, 12]} />
+                    <XAxis dataKey="name" stroke="#718096" fontSize={10} fontFamily="monospace" tickLine={false} />
+                    <YAxis stroke="#718096" fontSize={10} fontFamily="monospace" tickLine={false} domain={[0, 12]} />
                     <Tooltip
-                      contentStyle={{ 
-                        backgroundColor: isDarkMode ? '#090D16' : '#f1f5f9', 
-                        borderColor: isDarkMode ? '#3B82F6' : '#cbd5e1', 
-                        borderRadius: '6px' 
+                      contentStyle={{
+                        backgroundColor: '#f2f5f9',
+                        borderColor: '#c5cedd',
+                        borderRadius: '12px',
+                        boxShadow: '4px 4px 10px rgba(0,0,0,0.05)'
                       }}
-                      labelStyle={{ fontFamily: 'monospace', color: '#64748b', fontSize: '10px' }}
-                      itemStyle={{ fontFamily: 'monospace', color: isDarkMode ? '#f8fafc' : '#1e293b', fontSize: '12px' }}
+                      labelStyle={{ fontFamily: 'monospace', color: '#718096', fontSize: '10px' }}
+                      itemStyle={{ fontFamily: 'monospace', color: '#2d3748', fontSize: '12px' }}
                     />
-                    <Area type="monotone" dataKey="hours" stroke={isDarkMode ? '#3B82F6' : '#64748b'} strokeWidth={2} fillOpacity={1} fill="url(#sleepColor)" />
+                    <Area type="monotone" dataKey="hours" stroke="#475569" strokeWidth={2} fillOpacity={1} fill="url(#sleepColor)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
 
-              <form onSubmit={handleSleepSubmit} className="space-y-3 p-3 rounded border border-slate-300/30">
-                <div className="grid grid-cols-2 gap-2">
+              <form onSubmit={handleSleepSubmit} className="space-y-4 p-4 rounded-2xl neumorphic-inset bg-[#f2f5f9]">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Target Date</label>
+                    <label className="block font-label-caps text-[8px] text-[#718096] uppercase tracking-widest mb-1">Target Vector</label>
                     <select
                       value={selectedSleepDate}
                       onChange={(e) => setSelectedSleepDate(e.target.value)}
-                      className={`w-full border rounded px-2 py-1.5 text-xs font-mono ${
-                        isDarkMode 
-                          ? 'bg-slate-900 border-slate-800 text-white' 
-                          : 'bg-white border-slate-300 text-slate-800'
-                      }`}
+                      className="w-full bg-[#f2f5f9] text-xs font-mono text-[#2d3748] focus:outline-none border-0"
                     >
                       {currentWeekDates.map(day => (
                         <option key={day.dateString} value={day.dateString}>
-                          {DAYS_OF_WEEK[day.dayOfWeek].name} ({day.dayOfMonth})
+                          {DAYS_OF_WEEK[day.dayOfWeek].name.substring(0, 3)} ({day.dayOfMonth})
                         </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Sleep Hours</label>
+                    <label className="block font-label-caps text-[8px] text-[#718096] uppercase tracking-widest mb-1">Hours Logged</label>
                     <input
                       type="number"
                       step="0.5"
@@ -854,23 +772,15 @@ export default function Dashboard() {
                       value={sleepHoursInput}
                       onChange={(e) => setSleepHoursInput(e.target.value)}
                       placeholder="e.g. 7.5"
-                      className={`w-full border rounded px-2 py-1.5 text-xs font-mono ${
-                        isDarkMode 
-                          ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-700' 
-                          : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
-                      }`}
+                      className="w-full bg-[#f2f5f9] text-xs font-mono text-[#2d3748] placeholder-[#718096]/40 focus:outline-none border-0"
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
-                  className={`w-full flex items-center justify-center gap-2 font-mono font-bold text-[10px] uppercase py-2 rounded transition-all ${
-                    isDarkMode 
-                      ? 'bg-cyber-blue hover:bg-blue-600 text-white' 
-                      : 'bg-slate-800 hover:bg-slate-700 text-white shadow-sm'
-                  }`}
+                  className="w-full flex items-center justify-center gap-2 font-label-caps font-bold text-[9px] uppercase py-2 bg-[#f2f5f9] text-[#475569] neumorphic-extruded active:neumorphic-inset rounded-xl transition-all"
                 >
-                  <Zap className="h-3.5 w-3.5" /> Log sleep coordinates
+                  <span className="material-symbols-outlined text-[10px]">offline_pin</span> Log Sleep Coordinates
                 </button>
               </form>
             </div>
@@ -880,6 +790,41 @@ export default function Dashboard() {
         </div>
 
       </main>
+
+      {/* BottomNavBar for Mobile (Platform Anchor) */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#f2f5f9] py-4 px-6 flex justify-between items-center shadow-[0_-12px_24px_rgba(197,206,221,0.5)] z-50">
+        <button
+          onClick={() => setActiveView('matrix')}
+          className={`flex flex-col items-center ${activeView === 'matrix' ? 'text-[#475569]' : 'text-[#718096]'}`}
+        >
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: activeView === 'matrix' ? "'FILL' 1" : "'FILL' 0" }}>grid_view</span>
+          <span className="font-label-caps text-[9px] mt-1">MATRIX</span>
+        </button>
+        <button
+          onClick={() => setActiveView('trends')}
+          className={`flex flex-col items-center ${activeView === 'trends' ? 'text-[#475569]' : 'text-[#718096]'}`}
+        >
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: activeView === 'trends' ? "'FILL' 1" : "'FILL' 0" }}>trending_up</span>
+          <span className="font-label-caps text-[9px] mt-1">TRENDS</span>
+        </button>
+        <div className="w-14 h-14 -mt-10 neumorphic-extruded silver-gradient rounded-full flex items-center justify-center text-white border-2 border-[#f2f5f9] shadow-md active:scale-95 transition-transform">
+          <span className="material-symbols-outlined text-2xl">add</span>
+        </div>
+        <button
+          onClick={() => setActiveView('compliance')}
+          className={`flex flex-col items-center ${activeView === 'compliance' ? 'text-[#475569]' : 'text-[#718096]'}`}
+        >
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: activeView === 'compliance' ? "'FILL' 1" : "'FILL' 0" }}>verified</span>
+          <span className="font-label-caps text-[9px] mt-1">COMPLY</span>
+        </button>
+        <button
+          onClick={() => setActiveView('settings')}
+          className={`flex flex-col items-center ${activeView === 'settings' ? 'text-[#475569]' : 'text-[#718096]'}`}
+        >
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: activeView === 'settings' ? "'FILL' 1" : "'FILL' 0" }}>settings</span>
+          <span className="font-label-caps text-[9px] mt-1">SETTINGS</span>
+        </button>
+      </nav>
 
     </div>
   );
