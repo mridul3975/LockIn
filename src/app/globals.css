@@ -6,8 +6,6 @@
 
 @layer base {
   body {
-    background-color: #94a3b8;
-    color: #1e293b;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
@@ -37,51 +35,126 @@
 }
 
 /* ---------------------------------------------------- */
-/* LIGHT MODE: Vertical Command Layout Styles         */
+/* LIGHT MODE: Silver & Charcoal Neumorphic Styles     */
 /* ---------------------------------------------------- */
-.ceramic-slab {
-  background-color: #cbd5e1;
+.light-mode-theme {
+  background-color: #a0a0a0;
+  color: #333333;
+}
+
+.light-mode-theme .ceramic-slab {
+  background-color: #e0e0e0;
   border-radius: 40px;
   box-shadow: 
-    30px 30px 60px #64748b, 
-    -30px -30px 60px #f1f5f9;
+    30px 30px 60px #bebebe, 
+    -30px -30px 60px #ffffff;
 }
 
-.etched-text {
-  color: #475569;
-  text-shadow: 1px 1px 1px #f8fafc, -1px -1px 1px #94a3b8;
+.light-mode-theme .etched-text {
+  color: #333333;
+  text-shadow: 1px 1px 1px #ffffff, -1px -1px 1px #bebebe;
 }
 
-.embossed-panel {
-  background: #cbd5e1;
-  box-shadow: 12px 12px 24px #94a3b8, -12px -12px 24px #f8fafc;
+.light-mode-theme .embossed-panel {
+  background: #e0e0e0;
+  box-shadow: 12px 12px 24px #bebebe, -12px -12px 24px #ffffff;
   border-radius: 24px;
 }
 
-.carved-area {
-  background: #cbd5e1;
-  box-shadow: inset 16px 16px 32px #94a3b8, inset -16px -16px 32px #f8fafc;
+.light-mode-theme .carved-area {
+  background: #e0e0e0;
+  box-shadow: inset 16px 16px 32px #bebebe, inset -16px -16px 32px #ffffff;
   border-radius: 32px;
 }
 
-.carved-cell {
-  background: #cbd5e1;
-  box-shadow: inset 6px 6px 12px #94a3b8, inset -6px -6px 12px #f8fafc;
+.light-mode-theme .carved-cell {
+  background: #e0e0e0;
+  box-shadow: inset 6px 6px 12px #bebebe, inset -6px -6px 12px #ffffff;
   border-radius: 12px;
 }
 
 /* Active Checkbox in Light mode */
-.jewel-silver {
-  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 50%, #64748b 100%);
+.light-mode-theme .jewel-silver {
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 50%, #999999 100%);
   box-shadow: 
     inset 2px 2px 4px rgba(255,255,255,0.9),
     inset -2px -2px 4px rgba(0,0,0,0.2),
-    6px 6px 12px rgba(100,116,139,0.7);
+    6px 6px 12px rgba(153,153,153,0.7);
   border: 1px solid rgba(255,255,255,0.6);
   position: relative;
 }
 
-.jewel-silver::after {
+.light-mode-theme .jewel-silver::after {
+  content: '';
+  position: absolute;
+  top: 10%; left: 10%; width: 30%; height: 30%;
+  background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+  border-radius: 50%;
+}
+
+/* ---------------------------------------------------- */
+/* DARK MODE: Onyx & Steel Refinement Styles           */
+/* ---------------------------------------------------- */
+.dark-mode-theme {
+  background-color: #52525b;
+  color: #d4d4d8;
+}
+
+.dark-mode-theme .ceramic-slab {
+  background-color: #18181b;
+  border-radius: 40px;
+  box-shadow: 
+    30px 30px 60px #0f0f12, 
+    -30px -30px 60px #212124;
+}
+
+.dark-mode-theme .etched-text-onyx {
+  color: #a1a1aa;
+  text-shadow: 1px 1px 1px #27272a, -1px -1px 1px #09090b;
+}
+
+.dark-mode-theme .etched-text-silver {
+  color: #3f3f46;
+  text-shadow: 1px 1px 1px #ffffff, -1px -1px 1px #71717a;
+}
+
+.dark-mode-theme .embossed-panel {
+  background: #18181b;
+  box-shadow: 12px 12px 24px #0f0f12, -12px -12px 24px #212124;
+  border-radius: 24px;
+}
+
+/* Dark Mode carved area is light brushed steel */
+.dark-mode-theme .carved-area {
+  background: #d4d4d8;
+  box-shadow: inset 16px 16px 32px #a1a1aa, inset -16px -16px 32px #ffffff;
+  border-radius: 32px;
+}
+
+.dark-mode-theme .carved-cell {
+  background: #d4d4d8;
+  box-shadow: inset 6px 6px 12px #a1a1aa, inset -6px -6px 12px #ffffff;
+  border-radius: 12px;
+}
+
+.dark-mode-theme .carved-cell-onyx {
+  background: #18181b;
+  box-shadow: inset 6px 6px 12px #0f0f12, inset -6px -6px 12px #212124;
+  border-radius: 12px;
+}
+
+/* Active Checkbox in Dark mode */
+.dark-mode-theme .jewel-silver {
+  background: linear-gradient(135deg, #ffffff 0%, #d4d4d8 50%, #71717a 100%);
+  box-shadow: 
+    inset 2px 2px 4px rgba(255,255,255,0.9),
+    inset -2px -2px 4px rgba(0,0,0,0.2),
+    6px 6px 12px rgba(82,82,91,0.7);
+  border: 1px solid rgba(255,255,255,0.6);
+  position: relative;
+}
+
+.dark-mode-theme .jewel-silver::after {
   content: '';
   position: absolute;
   top: 10%; left: 10%; width: 30%; height: 30%;

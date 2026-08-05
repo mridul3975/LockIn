@@ -26,7 +26,8 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
 
-  // Local state for layout and interactions
+  // Mode state
+  const [isDarkMode, setIsDarkMode] = useState(false); // Switchable theme (Default to Light Mode)
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Local state for habit creation form
@@ -76,7 +77,7 @@ export default function Dashboard() {
 
   if (!mounted || status === 'loading') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#94a3b8]">
+      <div className="flex items-center justify-center min-h-screen bg-[#a0a0a0]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#cbd5e1] border border-white/40 animate-spin">
             <span className="material-symbols-outlined text-[#334155]">sync</span>
@@ -89,9 +90,9 @@ export default function Dashboard() {
 
   if (status === 'unauthenticated') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#94a3b8] px-4">
-        <div className="p-10 rounded-[40px] bg-[#cbd5e1] border border-white/60 shadow-[30px_30px_60px_#64748b,-30px_-30px_60px_#f1f5f9] max-w-sm w-full text-center">
-          <h1 className="font-mono text-3xl font-black text-[#334155] tracking-tighter mb-1">
+      <div className="flex items-center justify-center min-h-screen bg-[#a0a0a0] px-4">
+        <div className="p-10 rounded-[40px] bg-[#e0e0e0] border border-white/60 shadow-[30px_30px_60px_#bebebe,-30px_-30px_60px_#ffffff] max-w-sm w-full text-center">
+          <h1 className="font-mono text-3xl font-black text-[#333333] tracking-tighter mb-1">
             LOCK//In
           </h1>
           <p className="font-mono text-[10px] text-[#718096] uppercase tracking-widest mb-8">
@@ -99,7 +100,7 @@ export default function Dashboard() {
           </p>
           <button
             onClick={() => signIn('google')}
-            className="w-full flex items-center justify-center gap-3 bg-[#cbd5e1] hover:bg-[#b8c5d6] text-[#334155] font-mono font-bold py-4 px-6 rounded-xl border border-white/60 shadow-[6px_6px_12px_#94a3b8,-6px_-6px_12px_#f8fafc] transition-all"
+            className="w-full flex items-center justify-center gap-3 bg-[#e0e0e0] hover:bg-[#d8d8d8] text-[#333333] font-mono font-bold py-4 px-6 rounded-xl border border-white/60 shadow-[6px_6px_12px_#bebebe,-6px_-6px_12px_#ffffff] transition-all"
           >
             <span className="material-symbols-outlined text-lg">login</span>
             Sign in with Google
@@ -120,7 +121,6 @@ export default function Dashboard() {
     return `${year}-${month}-${day}`;
   }
 
-  // Current week dates generator
   function getCurrentWeekDates() {
     const current = new Date();
     const week = [];
@@ -273,28 +273,37 @@ export default function Dashboard() {
   const strokeDasharray = 301;
   const strokeDashoffset = strokeDasharray - (strokeDasharray * activeComplianceScore) / 100;
 
-  // Shared completion index markup
+  // Text class dynamically adapted
+  const textClass = isDarkMode ? 'etched-text-onyx text-[#f4f4f5]' : 'etched-text text-[#333333]';
+  const labelTextClass = isDarkMode ? 'etched-text-onyx text-zinc-400' : 'etched-text text-gray-500';
+  const complianceRingClass = isDarkMode ? 'text-zinc-400' : 'text-gray-600';
+  const complianceBgRingClass = isDarkMode ? 'text-zinc-800' : 'text-gray-300/40';
+
+  // Completion index rendering
   const renderCompletionIndex = () => (
     <div className="embossed-panel p-6 sm:p-8">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-label-caps text-[10px] etched-text uppercase tracking-[0.2em] text-[#334155] font-bold">Completion IDX</h3>
-        <span className="font-headline-md text-[#334155] etched-text font-bold">{todayCompletionPercentage}%</span>
+        <h3 className={`font-label-caps text-[10px] uppercase tracking-[0.2em] font-bold ${textClass}`}>Completion IDX</h3>
+        <span className={`font-headline-md font-bold ${textClass}`}>{todayCompletionPercentage}%</span>
       </div>
-      <div className="w-full h-3 carved-cell rounded-full p-0.5 overflow-hidden">
-        <div className="h-full jewel-silver rounded-full shadow-[0_0_12px_rgba(100,116,139,0.8)]" style={{ width: `${todayCompletionPercentage}%` }}></div>
+      <div className={`w-full h-3 rounded-full p-0.5 overflow-hidden ${isDarkMode ? 'carved-cell-onyx' : 'carved-cell'}`}>
+        <div 
+          className="h-full jewel-silver rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(255,255,255,0.2)]" 
+          style={{ width: `${todayCompletionPercentage}%` }}
+        ></div>
       </div>
-      <p className="font-label-caps text-[9px] etched-text uppercase mt-4 opacity-80 text-[#334155] font-bold">
+      <p className={`font-label-caps text-[9px] uppercase mt-4 opacity-80 font-bold ${textClass}`}>
         {todayCompletedCount} / {todayHabits.length} Active
       </p>
     </div>
   );
 
-  // Shared compliance donut gauge markup
+  // Compliance radial rendering
   const renderComplianceIndex = () => (
     <div className="embossed-panel p-6 sm:p-8 flex flex-col items-center text-center gap-6">
       <div className="w-full">
-        <h3 className="font-label-caps text-[10px] etched-text uppercase tracking-[0.2em] mb-3 text-[#334155] font-bold text-center">Compliance</h3>
-        <div className="flex p-1 carved-cell rounded-lg mb-2 max-w-[200px] mx-auto">
+        <h3 className={`font-label-caps text-[10px] uppercase tracking-[0.2em] mb-3 font-bold text-center ${textClass}`}>Compliance</h3>
+        <div className={`flex p-1 rounded-lg mb-2 max-w-[200px] mx-auto ${isDarkMode ? 'carved-cell-onyx' : 'carved-cell'}`}>
           {(['day', 'week', 'month'] as const).map((mode) => (
             <button
               key={mode}
@@ -302,7 +311,7 @@ export default function Dashboard() {
               className={`flex-1 py-1 font-label-caps text-[8px] rounded transition-all ${
                 complianceMode === mode
                   ? 'jewel-silver text-slate-800 font-bold'
-                  : 'text-[#718096]'
+                  : (isDarkMode ? 'text-zinc-500' : 'text-[#718096]')
               }`}
             >
               {mode.toUpperCase()}
@@ -310,27 +319,42 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
-      <div className="relative w-32 h-32 carved-cell rounded-full flex items-center justify-center bg-[#cbd5e1]">
+      <div className={`relative w-32 h-32 rounded-full flex items-center justify-center ${isDarkMode ? 'carved-cell-onyx bg-[#18181b]' : 'carved-cell bg-[#e0e0e0]'}`}>
         <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-          <circle className="text-slate-400/40" cx="50%" cy="50%" fill="transparent" r="48" stroke="currentColor" stroke-width="8"></circle>
-          <circle className="text-slate-600 drop-shadow-[0_0_6px_rgba(100,116,139,0.6)]" cx="50%" cy="50%" fill="transparent" r="48" stroke="currentColor" stroke-dasharray={strokeDasharray} stroke-dashoffset={strokeDashoffset} stroke-linecap="round" stroke-width="8"></circle>
+          <circle className={complianceBgRingClass} cx="50%" cy="50%" fill="transparent" r="48" stroke="currentColor" stroke-width="8"></circle>
+          <circle className={`${complianceRingClass} drop-shadow-[0_0_6px_rgba(255,255,255,0.2)]`} cx="50%" cy="50%" fill="transparent" r="48" stroke="currentColor" stroke-dasharray={strokeDasharray} stroke-dashoffset={strokeDashoffset} stroke-linecap="round" stroke-width="8"></circle>
         </svg>
-        <span className="font-label-caps text-[14px] etched-text text-[#334155] font-bold">{activeComplianceScore}%</span>
+        <span className={`font-label-caps text-[14px] font-bold ${textClass}`}>{activeComplianceScore}%</span>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen flex w-full font-mono bg-[#94a3b8] text-[#1e293b]">
+    <div className={`min-h-screen flex w-full font-mono transition-colors duration-300 ${
+      isDarkMode ? 'dark-mode-theme' : 'light-mode-theme'
+    }`}>
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 w-full max-w-[1400px] mx-auto p-4 sm:p-8 lg:p-12 justify-center items-stretch">
         
-        {/* MOBILE TOP BAR (Only visible below lg) */}
-        <header className="lg:hidden w-full flex items-center justify-between pb-6 mb-2 border-b border-white/40 shadow-[0_1px_0_rgba(100,116,139,0.3)] relative">
+        {/* MOBILE TOP BAR */}
+        <header className={`lg:hidden w-full flex items-center justify-between pb-6 mb-2 border-b relative ${
+          isDarkMode ? 'border-zinc-800 shadow-[0_1px_0_rgba(0,0,0,0.5)]' : 'border-white/40 shadow-[0_1px_0_rgba(153,153,153,0.3)]'
+        }`}>
           <div>
-            <h1 className="font-headline-md text-xl etched-text tracking-[0.2em] uppercase text-[#334155] font-bold">LOCK//In</h1>
-            <h2 className="font-label-caps text-[9px] text-[#718096] opacity-80 uppercase font-bold mt-1">Platinum Habit Matrix V1.1</h2>
+            <h1 className={`font-headline-md text-xl tracking-[0.2em] uppercase font-bold ${textClass}`}>LOCK//In</h1>
+            <h2 className={`font-label-caps text-[9px] uppercase font-bold mt-1 ${labelTextClass}`}>Platinum Habit Matrix V1.1</h2>
           </div>
-          <div className="relative">
+          <div className="flex items-center gap-4 relative">
+            {/* Theme Toggle button */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="w-10 h-10 rounded-full jewel-silver flex items-center justify-center cursor-pointer hover:scale-95 transition-transform"
+              title="Toggle Mode"
+            >
+              <span className="material-symbols-outlined text-[#333333] text-lg">
+                {isDarkMode ? 'light_mode' : 'dark_mode'}
+              </span>
+            </button>
+
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="w-10 h-10 rounded-full jewel-silver flex items-center justify-center cursor-pointer hover:scale-95 transition-transform"
@@ -343,19 +367,19 @@ export default function Dashboard() {
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <span className="material-symbols-outlined text-[#334155]">account_circle</span>
+                <span className="material-symbols-outlined text-[#333333]">account_circle</span>
               )}
             </button>
 
             {showProfileMenu && (
-              <div className="absolute right-0 mt-3 w-64 embossed-panel p-6 z-50 flex flex-col gap-4 text-left">
+              <div className="absolute right-0 mt-12 w-64 embossed-panel p-6 z-50 flex flex-col gap-4 text-left">
                 <div className="flex flex-col">
-                  <span className="font-label-caps text-[9px] text-[#718096] uppercase font-bold">User Email</span>
-                  <span className="font-mono text-xs text-[#334155] font-bold break-all">{session?.user?.email}</span>
+                  <span className={`font-label-caps text-[9px] uppercase font-bold ${isDarkMode ? 'text-zinc-500' : 'text-gray-500'}`}>User Email</span>
+                  <span className={`font-mono text-xs font-bold break-all ${isDarkMode ? 'text-white' : 'text-[#333333]'}`}>{session?.user?.email}</span>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full py-2 px-4 rounded-xl jewel-silver font-label-caps text-[10px] text-[#334155] font-bold text-center hover:scale-95 transition-transform"
+                  className="w-full py-2 px-4 rounded-xl jewel-silver font-label-caps text-[10px] text-[#333333] font-bold text-center hover:scale-95 transition-transform"
                 >
                   LOGOUT
                 </button>
@@ -366,9 +390,11 @@ export default function Dashboard() {
 
         {/* Command Center Sidebar (Desktop Only) */}
         <aside className="hidden lg:flex flex-col gap-12 w-[320px] shrink-0">
-          <div className="flex flex-col items-start pb-8 border-b border-white/40 shadow-[0_1px_0_rgba(100,116,139,0.3)]">
-            <h1 className="font-headline-md text-xl etched-text tracking-[0.2em] uppercase text-[#334155] font-bold">LOCK//In</h1>
-            <h2 className="font-label-caps text-[9px] text-[#718096] opacity-80 uppercase font-bold mt-2">Platinum Habit Matrix V1.1</h2>
+          <div className={`flex flex-col items-start pb-8 border-b shadow-[0_1px_0_rgba(153,153,153,0.3)] ${
+            isDarkMode ? 'border-zinc-800 shadow-[0_1px_0_rgba(0,0,0,0.5)]' : 'border-white/40 shadow-[0_1px_0_rgba(153,153,153,0.3)]'
+          }`}>
+            <h1 className={`font-headline-md text-xl tracking-[0.2em] uppercase font-bold ${textClass}`}>LOCK//In</h1>
+            <h2 className={`font-label-caps text-[9px] uppercase font-bold mt-2 ${labelTextClass}`}>Platinum Habit Matrix V1.1</h2>
           </div>
 
           <div className="flex flex-col gap-8 w-full">
@@ -381,21 +407,38 @@ export default function Dashboard() {
         <div className="flex flex-col gap-6 lg:gap-8 flex-1 w-full min-w-0">
           
           {/* Header Area Navigation (Desktop Only) */}
-          <div className="hidden lg:flex flex-wrap items-center gap-4 justify-end pb-8 border-b border-white/40 shadow-[0_1px_0_rgba(100,116,139,0.3)] relative">
+          <div className={`hidden lg:flex flex-wrap items-center gap-4 justify-end pb-8 border-b relative ${
+            isDarkMode ? 'border-zinc-800 shadow-[0_1px_0_rgba(0,0,0,0.5)]' : 'border-white/40 shadow-[0_1px_0_rgba(153,153,153,0.3)]'
+          }`}>
             <button
               onClick={syncWithDb}
               disabled={isSyncing}
-              className="flex items-center gap-2 carved-cell px-6 py-3 rounded-full hover:scale-95 transition-transform"
+              className={`flex items-center gap-2 px-6 py-3 rounded-full hover:scale-95 transition-transform ${
+                isDarkMode ? 'carved-cell-onyx' : 'carved-cell'
+              }`}
             >
               <span className={`w-2 h-2 rounded-full jewel-silver ${isSyncing ? 'animate-spin' : ''}`}></span>
-              <span className="font-label-caps text-label-caps etched-text text-[#334155] font-bold">SYNC VECTORS</span>
+              <span className={`font-label-caps text-label-caps font-bold ${textClass}`}>SYNC VECTORS</span>
             </button>
             
-            <div className="flex items-center gap-4 carved-cell px-6 py-3 rounded-full">
-              <span className="font-label-caps text-label-caps etched-text text-[#334155] font-bold">WK: {currentWeekDates[0]?.dateString} / {currentWeekDates[6]?.dateString}</span>
+            <div className={`flex items-center gap-4 px-6 py-3 rounded-full ${
+              isDarkMode ? 'carved-cell-onyx' : 'carved-cell'
+            }`}>
+              <span className={`font-label-caps text-label-caps font-bold ${textClass}`}>WK: {currentWeekDates[0]?.dateString} / {currentWeekDates[6]?.dateString}</span>
             </div>
 
-            <div className="relative">
+            <div className="flex items-center gap-4 relative">
+              {/* Theme Toggle in Desktop Header */}
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="w-10 h-10 rounded-full jewel-silver flex items-center justify-center cursor-pointer hover:scale-95 transition-transform"
+                title="Toggle Mode"
+              >
+                <span className="material-symbols-outlined text-[#333333] text-lg">
+                  {isDarkMode ? 'light_mode' : 'dark_mode'}
+                </span>
+              </button>
+
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="w-10 h-10 rounded-full jewel-silver flex items-center justify-center cursor-pointer hover:scale-95 transition-transform"
@@ -408,19 +451,19 @@ export default function Dashboard() {
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 ) : (
-                  <span className="material-symbols-outlined text-[#334155]">account_circle</span>
+                  <span className="material-symbols-outlined text-[#333333]">account_circle</span>
                 )}
               </button>
 
               {showProfileMenu && (
-                <div className="absolute right-0 mt-3 w-64 embossed-panel p-6 z-50 flex flex-col gap-4 text-left">
+                <div className="absolute right-0 mt-12 w-64 embossed-panel p-6 z-50 flex flex-col gap-4 text-left">
                   <div className="flex flex-col">
-                    <span className="font-label-caps text-[9px] text-[#718096] uppercase font-bold">User Email</span>
-                    <span className="font-mono text-xs text-[#334155] font-bold break-all">{session?.user?.email}</span>
+                    <span className={`font-label-caps text-[9px] uppercase font-bold ${isDarkMode ? 'text-zinc-500' : 'text-gray-500'}`}>User Email</span>
+                    <span className={`font-mono text-xs font-bold break-all ${isDarkMode ? 'text-white' : 'text-[#333333]'}`}>{session?.user?.email}</span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-full py-2 px-4 rounded-xl jewel-silver font-label-caps text-[10px] text-[#334155] font-bold text-center hover:scale-95 transition-transform"
+                    className="w-full py-2 px-4 rounded-xl jewel-silver font-label-caps text-[10px] text-[#333333] font-bold text-center hover:scale-95 transition-transform"
                   >
                     LOGOUT
                   </button>
@@ -434,13 +477,17 @@ export default function Dashboard() {
             <button
               onClick={syncWithDb}
               disabled={isSyncing}
-              className="flex items-center justify-center gap-2 carved-cell w-full py-3 rounded-xl hover:scale-95 transition-transform"
+              className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl hover:scale-95 transition-transform ${
+                isDarkMode ? 'carved-cell-onyx' : 'carved-cell'
+              }`}
             >
               <span className={`w-2 h-2 rounded-full jewel-silver ${isSyncing ? 'animate-spin' : ''}`}></span>
-              <span className="font-label-caps text-[10px] etched-text text-[#334155] font-bold">SYNC VECTORS</span>
+              <span className={`font-label-caps text-[10px] font-bold ${textClass}`}>SYNC VECTORS</span>
             </button>
-            <div className="flex items-center justify-center gap-2 carved-cell w-full py-3 rounded-xl text-center">
-              <span className="font-label-caps text-[9px] etched-text text-[#334155] font-bold">WK: {currentWeekDates[0]?.dateString} / {currentWeekDates[6]?.dateString}</span>
+            <div className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-center ${
+              isDarkMode ? 'carved-cell-onyx' : 'carved-cell'
+            }`}>
+              <span className={`font-label-caps text-[9px] font-bold ${textClass}`}>WK: {currentWeekDates[0]?.dateString} / {currentWeekDates[6]?.dateString}</span>
             </div>
           </div>
 
@@ -449,7 +496,9 @@ export default function Dashboard() {
             <div className="overflow-x-auto w-full scrollbar-thin order-1">
               <table className="w-full border-separate border-spacing-y-3 border-spacing-x-2 sm:border-spacing-y-4 sm:border-spacing-x-4 min-w-[640px]">
                 <thead>
-                  <tr className="etched-text font-label-caps text-[9px] uppercase tracking-[0.3em] text-[#334155] font-bold">
+                  <tr className={`font-label-caps text-[9px] uppercase tracking-[0.3em] font-bold ${
+                    isDarkMode ? 'etched-text-silver text-[#18181b]' : 'etched-text text-[#333333]'
+                  }`}>
                     <th className="text-left py-2 px-2 sm:px-4 w-1/4">Identifier</th>
                     {currentWeekDates.map((day, idx) => (
                       <th key={idx} className="text-center">
@@ -465,8 +514,12 @@ export default function Dashboard() {
                     <tr key={habit.id}>
                       <td className="px-2 sm:px-4 py-2">
                         <div className="flex flex-col max-w-[120px] sm:max-w-none overflow-hidden">
-                          <span className="text-[#334155] font-body-lg etched-text uppercase tracking-widest font-bold text-xs sm:text-sm truncate">{habit.name}</span>
-                          <span className="font-label-caps text-[8px] text-[#718096] truncate">
+                          <span className={`font-body-lg uppercase tracking-widest font-bold text-xs sm:text-sm truncate ${
+                            isDarkMode ? 'etched-text-silver text-[#18181b]' : 'etched-text text-[#333333]'
+                          }`}>{habit.name}</span>
+                          <span className={`font-label-caps text-[8px] truncate ${
+                            isDarkMode ? 'text-zinc-600' : 'text-[#718096]'
+                          }`}>
                             {habit.frequency === 'daily' && 'DAILY'}
                             {habit.frequency === 'weekly' && 'WEEKLY'}
                             {habit.frequency === 'specific_days' &&
@@ -507,7 +560,9 @@ export default function Dashboard() {
                       <td className="text-right px-2 sm:px-4">
                         <button
                           onClick={() => deleteHabit(habit.id)}
-                          className="material-symbols-outlined text-[#718096] hover:text-[#991b1b] transition-colors text-base"
+                          className={`material-symbols-outlined hover:text-[#991b1b] transition-colors text-base ${
+                            isDarkMode ? 'text-zinc-600' : 'text-[#718096]'
+                          }`}
                         >
                           delete
                         </button>
@@ -516,7 +571,9 @@ export default function Dashboard() {
                   ))}
                   {habits.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="text-center py-8 font-label-caps text-[10px] text-[#718096]">
+                      <td colSpan={9} className={`text-center py-8 font-label-caps text-[10px] ${
+                        isDarkMode ? 'text-zinc-600' : 'text-[#718096]'
+                      }`}>
                         No parameters defined. Deploy one below.
                       </td>
                     </tr>
@@ -532,7 +589,7 @@ export default function Dashboard() {
 
             {/* Creator Form */}
             <div className="embossed-panel p-4 sm:p-6 mt-2 order-3 lg:order-2">
-              <h3 className="font-headline-md text-xs sm:text-sm font-bold text-[#334155] uppercase mb-4">Define Vector</h3>
+              <h3 className={`font-headline-md text-xs sm:text-sm font-bold uppercase mb-4 ${textClass}`}>Define Vector</h3>
               <form onSubmit={handleAddHabitSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input
@@ -540,12 +597,16 @@ export default function Dashboard() {
                     value={newHabitName}
                     onChange={(e) => setNewHabitName(e.target.value)}
                     placeholder="Parameter Name..."
-                    className="w-full carved-cell rounded-xl px-4 py-2.5 bg-[#cbd5e1] text-xs text-[#334155] placeholder-[#718096]/50 border-0 focus:outline-none"
+                    className={`w-full carved-cell rounded-xl px-4 py-2.5 text-xs placeholder-[#718096]/50 border-0 focus:outline-none ${
+                      isDarkMode ? 'bg-[#d4d4d8] text-[#18181b]' : 'bg-[#cbd5e1] text-[#333333]'
+                    }`}
                   />
                   <select
                     value={newHabitFreq}
                     onChange={(e) => setNewHabitFreq(e.target.value as any)}
-                    className="w-full carved-cell rounded-xl px-4 py-2.5 bg-[#cbd5e1] text-xs text-[#334155] border-0 focus:outline-none"
+                    className={`w-full carved-cell rounded-xl px-4 py-2.5 text-xs border-0 focus:outline-none ${
+                      isDarkMode ? 'bg-[#d4d4d8] text-[#18181b]' : 'bg-[#cbd5e1] text-[#333333]'
+                    }`}
                   >
                     <option value="daily">Daily Loop</option>
                     <option value="weekly">Weekly Cycle</option>
@@ -555,7 +616,7 @@ export default function Dashboard() {
 
                 {newHabitFreq === 'specific_days' && (
                   <div className="space-y-2">
-                    <label className="block font-label-caps text-[9px] text-[#718096] uppercase tracking-widest">Active Vector Days</label>
+                    <label className={`block font-label-caps text-[9px] uppercase tracking-widest ${textClass}`}>Active Vector Days</label>
                     <div className="flex flex-wrap gap-2">
                       {DAYS_OF_WEEK.map((day, idx) => {
                         const active = selectedDays.includes(idx);
@@ -567,7 +628,7 @@ export default function Dashboard() {
                             className={`px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
                               active
                                 ? 'jewel-silver text-slate-800 font-bold'
-                                : 'carved-cell text-[#718096]'
+                                : `carved-cell ${isDarkMode ? 'text-zinc-600' : 'text-[#718096]'}`
                             }`}
                           >
                             {day.name}
@@ -580,7 +641,7 @@ export default function Dashboard() {
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl jewel-silver font-label-caps text-[10px] text-[#334155] font-bold uppercase hover:scale-[0.98] transition-transform"
+                  className="w-full py-2.5 rounded-xl jewel-silver font-label-caps text-[10px] text-[#333333] font-bold uppercase hover:scale-[0.98] transition-transform"
                 >
                   DEPLOY VECTOR
                 </button>
@@ -594,19 +655,19 @@ export default function Dashboard() {
 
             {/* Sleep log */}
             <div className="embossed-panel p-4 sm:p-6 order-5 lg:order-3">
-              <h3 className="font-headline-md text-xs sm:text-sm font-bold text-[#334155] uppercase mb-4">Sleep Log Coordinates</h3>
+              <h3 className={`font-headline-md text-xs sm:text-sm font-bold uppercase mb-4 ${textClass}`}>Sleep Log Coordinates</h3>
               <div className="h-32 w-full mb-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sleepGraphData}>
                     <defs>
                       <linearGradient id="sleepColorLight" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#475569" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#475569" stopOpacity={0} />
+                        <stop offset="5%" stopColor={isDarkMode ? '#ffffff' : '#475569'} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={isDarkMode ? '#ffffff' : '#475569'} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="name" stroke="#718096" fontSize={9} fontFamily="monospace" tickLine={false} />
-                    <YAxis stroke="#718096" fontSize={9} fontFamily="monospace" tickLine={false} domain={[0, 12]} />
-                    <Area type="monotone" dataKey="hours" stroke="#334155" strokeWidth={2} fill="url(#sleepColorLight)" />
+                    <XAxis dataKey="name" stroke={isDarkMode ? '#a1a1aa' : '#718096'} fontSize={9} fontFamily="monospace" tickLine={false} />
+                    <YAxis stroke={isDarkMode ? '#a1a1aa' : '#718096'} fontSize={9} fontFamily="monospace" tickLine={false} domain={[0, 12]} />
+                    <Area type="monotone" dataKey="hours" stroke={isDarkMode ? '#ffffff' : '#334155'} strokeWidth={2} fill="url(#sleepColorLight)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -614,7 +675,9 @@ export default function Dashboard() {
                 <select
                   value={selectedSleepDate}
                   onChange={(e) => setSelectedSleepDate(e.target.value)}
-                  className="carved-cell rounded-xl px-2 py-2 bg-[#cbd5e1] text-xs text-[#334155] border-0 focus:outline-none w-full"
+                  className={`carved-cell rounded-xl px-2 py-2 text-xs border-0 focus:outline-none w-full ${
+                    isDarkMode ? 'bg-[#d4d4d8] text-[#18181b]' : 'bg-[#cbd5e1] text-[#333333]'
+                  }`}
                 >
                   {currentWeekDates.map(day => (
                     <option key={day.dateString} value={day.dateString}>
@@ -628,11 +691,13 @@ export default function Dashboard() {
                   value={sleepHoursInput}
                   onChange={(e) => setSleepHoursInput(e.target.value)}
                   placeholder="Hours..."
-                  className="carved-cell rounded-xl px-2 py-2 bg-[#cbd5e1] text-xs text-[#334155] border-0 focus:outline-none w-full"
+                  className={`carved-cell rounded-xl px-2 py-2 text-xs border-0 focus:outline-none w-full ${
+                    isDarkMode ? 'bg-[#d4d4d8] text-[#18181b]' : 'bg-[#cbd5e1] text-[#333333]'
+                  }`}
                 />
                 <button
                   type="submit"
-                  className="py-2 rounded-xl jewel-silver font-label-caps text-[9px] text-[#334155] font-bold uppercase w-full hover:scale-[0.98] transition-transform"
+                  className="py-2 rounded-xl jewel-silver font-label-caps text-[9px] text-[#333333] font-bold uppercase w-full hover:scale-[0.98] transition-transform"
                 >
                   LOG SLEEP
                 </button>
